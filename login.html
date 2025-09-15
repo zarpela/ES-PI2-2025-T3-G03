@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Link externo para ícones (i class)-->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+  <title>Login NotaDez</title>
+
+  <!-- Conectando o CSS -->
+  <link rel="stylesheet" href="css-login.css">
+</head>
+<body>
+  <main class="container"> 
+    <form>
+      
+      <h1> NotaDez Login </h1>
+      <div class="inputBox">
+        <i class="bx bxs-user"></i>
+        <input type="email" placeholder="Email" id="EmailLogin">
+      </div>
+      <div class="inputBox">
+        <i class="bx bxs-lock"></i>
+        <input type="password" placeholder="Senha" id="SenhasLogin">
+      </div>
+
+      <div class="EsqueceuSenha">
+        <label>
+          <input type="checkbox">
+          Lembrar a senha
+        </label>
+          <a href="#" onclick="esqueciSenha()">Esqueci minha senha</a>
+      </div>
+
+      <button type="submit" id="EntrarLogin">Entrar</button>
+
+      <div>
+        <p>Não tem uma conta? <a href="#">Cadastre-se</a></p>
+      </div>
+    </form>
+    
+
+    <!-- Conectando o JavaScript -->
+    <script src="js-login.js"></script>
+  </main>
+</body>
+</html>
