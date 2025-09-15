@@ -11,4 +11,8 @@ router.get('/usuario/cadastrar', (req, res) => {
   res.render(path.join(__dirname, 'cadastro.ejs'));
 });
 
+router.get('/usuario/recuperar-senha', (req, res) => {
+  res.render(path.join(__dirname, 'senha_recover.ejs'));
+});
+
 export default router;
