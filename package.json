@@ -1,0 +1,35 @@
+{
+  "name": "es-pi2-2025-t3-g03",
+  "version": "1.0.0",
+  "description": "**Repositório:** `ES-PI2-2025-T3-G03`  \r **Disciplina:** Projeto Integrador II – PUC-Campinas  \r **Orientador:** Prof. Luã Muriana",
+  "main": "notadez.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/notadez.js",
+    "build": "tsc",
+    "dev": "nodemon src/notadez.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zarpela/ES-PI2-2025-T3-G03.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zarpela/ES-PI2-2025-T3-G03/issues"
+  },
+  "homepage": "https://github.com/zarpela/ES-PI2-2025-T3-G03#readme",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.4.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
