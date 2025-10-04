@@ -26,11 +26,11 @@
         <input type="email" class="form-control" id="email-recuperar" placeholder="Digite o email cadastrado" required/>
       </div>
 
-      <p id="mensagem-codigo" class="text-center text-success d-none">Um código foi enviado para seu e-mail.</p>
+      <p id="mensagem-codigo" class="text-center text-success d-none">O código foi enviado para o seu e-mail.</p>
 
       <div class="mb-4 d-none" id="codigo-group">
         <label for="codigo-verificacao" class="form-label">Código de Verificação</label>
-        <input type="text" class="form-control" id="codigo-verificacao" placeholder="Digite o código recebido"/>
+        <input type="text" class="form-control" id="codigo-verificacao" placeholder="Digite o código recebido" maxlength="7"/>
       </div>
 
       <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -51,6 +51,38 @@
     const btnEnviarEmail = document.getElementById('btn-enviar-email');
     const btnVerificarCodigo = document.getElementById('btn-verificar-codigo');
 
+    // Gerar Código para autenticação
+    const codigo = {
+    value: '',
+    length: 7,
+    characters: {
+    numbers: '0123456789',
+    lowercase:'abcdefghijklmnopqrstuvwxyz',
+    uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    },
+
+      gerar(chars){
+        // Se houver código, retornar o código já gerado
+        if (this.value) {
+          return this.value; 
+        }
+
+        // Gerar código
+        let gen = '';
+
+        this.length = this.length < 5 || this.length > 50 ? 15 : this.length
+
+        chars = chars || Object.values(this.characters).join('');
+
+        for (let i = 0; i < this.length; i++){
+            gen += chars[Math.floor(Math.random() * chars.length)]
+        }
+        this.value = gen;
+        return gen;
+      }
+      
+    };
+
     form.addEventListener('submit', function(event) {
       event.preventDefault();
 
@@ -68,11 +100,23 @@
         
         // ADIÇÃO: Torna o campo de código obrigatório AGORA que está visível
         codigoInput.required = true;
+        
+        // Gera o código
+        codigo.gerar();
+
+        // Simular valores de código
+        alert('Código gerado: ' + codigo.value);
+        console.log('Simulando verificação do código:', codigo.value);
 
       } else {
-        // --- Etapa 2: Verificar o Código ---
-        console.log('Simulando verificação do código:', codigoInput.value);
-        alert('Código enviado para verificação!');
+        const codigoDigitado = codigoInput.value;  // valor do input do usuário
+        const codigoGerado = codigo.value;         // código gerado e armazenado
+
+        if (codigoDigitado === codigoGerado) {
+          alert('Código verificado com sucesso!');
+        } else {
+          alert('Código incorreto, tente novamente.');
+        }
       }
     });
   </script>
