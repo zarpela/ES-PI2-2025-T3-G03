@@ -46,34 +46,82 @@
     const form = document.getElementById('form-recuperar');
     const emailInput = document.getElementById('email-recuperar');
     const codigoGroup = document.getElementById('codigo-group');
-    const codigoInput = document.getElementById('codigo-verificacao'); // Seleciona o input do código
+    const codigoInput = document.getElementById('codigo-verificacao');
     const mensagemCodigo = document.getElementById('mensagem-codigo');
     const btnEnviarEmail = document.getElementById('btn-enviar-email');
     const btnVerificarCodigo = document.getElementById('btn-verificar-codigo');
+    const alertContainer = document.createElement('div'); // Container para alertas
+    form.prepend(alertContainer);
 
-    form.addEventListener('submit', function(event) {
-      event.preventDefault();
+    // Função para exibir alertas
+    function showAlert(message, type = 'danger') {
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    }
 
-      if (!btnEnviarEmail.classList.contains('d-none')) {
-        // --- Etapa 1: Enviar o Email ---
-        console.log('Simulando envio de código para:', emailInput.value);
-        
-        // Atualiza a interface
-        emailInput.disabled = true;
-        btnEnviarEmail.classList.add('d-none'); 
-        
-        mensagemCodigo.classList.remove('d-none');
-        codigoGroup.classList.remove('d-none');
-        btnVerificarCodigo.classList.remove('d-none');
-        
-        // ADIÇÃO: Torna o campo de código obrigatório AGORA que está visível
-        codigoInput.required = true;
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        alertContainer.innerHTML = ''; // Limpa alertas antigos
 
-      } else {
-        // --- Etapa 2: Verificar o Código ---
-        console.log('Simulando verificação do código:', codigoInput.value);
-        alert('Código enviado para verificação!');
-      }
+        if (!btnEnviarEmail.classList.contains('d-none')) {
+            // --- Etapa 1: Enviar o Email ---
+            try {
+                const response = await fetch('/usuario/recuperar-senha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailInput.value })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao solicitar recuperação de senha.');
+                }
+
+                // Atualiza a interface
+                emailInput.disabled = true;
+                btnEnviarEmail.classList.add('d-none');
+                mensagemCodigo.textContent = data.message; // Usa a mensagem do backend
+                mensagemCodigo.classList.remove('d-none');
+                codigoGroup.classList.remove('d-none');
+                btnVerificarCodigo.classList.remove('d-none');
+                codigoInput.required = true;
+
+            } catch (error) {
+                showAlert(error.message);
+            }
+
+        } else {
+            // --- Etapa 2: Verificar o Código ---
+            try {
+                const response = await fetch('/usuario/verificar-codigo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: emailInput.value,
+                        code: codigoInput.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao verificar o código.');
+                }
+                
+                // Sucesso!
+                showAlert(data.message, 'success');
+                // Opcional: redirecionar para a página de redefinição de senha
+                // window.location.href = '/usuario/redefinir-senha?token=...';
+
+            } catch (error) {
+                showAlert(error.message);
+            }
+        }
     });
   </script>
 </body>

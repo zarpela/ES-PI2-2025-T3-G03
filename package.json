@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/notadez.js",
     "build": "tsc",
-    "dev": "nodemon src/notadez.ts"
+    "dev": "nodemon --exec 'ts-node' -r dotenv/config src/notadez.ts"
   },
   "repository": {
     "type": "git",
@@ -22,12 +22,15 @@
   },
   "homepage": "https://github.com/zarpela/ES-PI2-2025-T3-G03#readme",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "nodemailer": "^7.0.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.4.0",
+    "@types/nodemailer": "^7.0.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
