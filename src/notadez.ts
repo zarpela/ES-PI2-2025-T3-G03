@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config(); // Carrega as variáveis do arquivo .env
+
 import express from "express";
 import path from 'path'; 
 
