@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR"> 
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -24,22 +24,22 @@
       <h1 class="mb-4 text-center">NotaDez Cadastro</h1>
       
       <div class="mb-3">
-        <label for="nome-cadastro" class="form-label">Nome</label>
+        <label for="nome-cadastro" class="form-label">Nome *</label>
         <input type="text" class="form-control" id="nome-cadastro" placeholder="Digite seu o nome completo" required/>
       </div>
 
       <div class="mb-3">
-        <label for="email-cadastro" class="form-label">Email</label>
+        <label for="email-cadastro" class="form-label">Email *</label>
         <input type="email" class="form-control" id="email-cadastro" placeholder="Digite seu email" required/>
       </div>
 
       <div class="mb-3">
-        <label for="telefone-cadastro" class="form-label">Telefone</label>
-        <input type="tel" class="form-control" id="telefone-cadastro" placeholder="(xx) xxxxx-xxxx">
+        <label for="telefone-cadastro" class="form-label">Telefone *</label>
+        <input type="tel" class="form-control" id="telefone-cadastro" placeholder="(xx) xxxxx-xxxx" required pattern="\(\d{2}\)\s?\d{4,5}-\d{4}"  maxlength="15"  title="Digite o telefone no formato (XX) XXXXX-XXXX" />
       </div>
 
       <div class="mb-4">
-        <label for="senha-cadastro" class="form-label">Senha</label>
+        <label for="senha-cadastro" class="form-label">Senha *</label>
         <input type="password" class="form-control" id="senha-cadastro" placeholder="Digite a senha" required/>
       </div>
 
