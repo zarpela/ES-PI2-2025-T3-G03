@@ -43,6 +43,11 @@
         <input type="password" class="form-control" id="senha-cadastro" placeholder="Digite a senha" required/>
       </div>
 
+      <div class="mb-4">
+        <label for="conf-senha-cadastro" class="form-label">Confirmar Senha *</label>
+        <input type="password" class="form-control" id="conf-senha-cadastro" placeholder="Digite a senha" required/>
+      </div>
+
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
         <a href="/" type="button" id="voltar" class="btn btn-light mb-3">Voltar </a>
         <button type="submit" id="EntrarLogin" class="btn btn-primary mb-3">Cadastrar</button>
@@ -50,8 +55,48 @@
 
     </form>
 
-    <!-- Conectando o JavaScript (A fazer) -->
-    <script src="js-login.js"></script>
+    <script>
+
+      document.addEventListener('DOMContentLoaded', function () {
+      const form = document.querySelector('form');
+      const senha = document.getElementById('senha-cadastro');
+      const confSenha = document.getElementById('conf-senha-cadastro');
+
+      // Evento de validação de senha, caso esteja errado muda a orda para vermelha.
+
+      form.addEventListener('submit', function (e) {
+        if (senha.value !== confSenha.value) {
+          // Impede o envio do formulário
+          e.preventDefault();
+          confSenha.classList.add('is-invalid');
+          if (!document.getElementById('senha-mismatch-feedback')) {
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            feedback.id = 'senha-mismatch-feedback';
+            feedback.textContent = 'Senhas diferentes';
+            confSenha.parentNode.appendChild(feedback);
+          }
+          confSenha.focus();
+        } else {
+          confSenha.classList.remove('is-invalid');
+          const feedback = document.getElementById('senha-mismatch-feedback');
+          if (feedback) feedback.remove();
+        }
+      });
+
+      // Reinicia evento de erro caso o usuário tente cadastrar novamente
+
+      confSenha.addEventListener('input', function () {
+        if (confSenha.classList.contains('is-invalid')) {
+          confSenha.classList.remove('is-invalid');
+          const feedback = document.getElementById('senha-mismatch-feedback');
+          if (feedback) feedback.remove();
+        }
+      });
+});
+
+
+    </script>
   </main>
 </body>
 </html>
