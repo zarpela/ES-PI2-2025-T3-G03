@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node dist/notadez.js",
     "build": "tsc",
-    "dev": "nodemon --exec 'ts-node' -r dotenv/config src/notadez.ts"
+    "dev": "nodemon --exec ts-node -r dotenv/config src/notadez.ts"
   },
   "repository": {
     "type": "git",
