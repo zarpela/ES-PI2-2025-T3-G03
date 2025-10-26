@@ -1,3 +1,5 @@
+// Desenvolvido por Marcelo
+
 import nodemailer from 'nodemailer';
 
 // Carrega as configurações do ambiente
