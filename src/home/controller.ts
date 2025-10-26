@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-router.get('/home', (req, res) => {
+router.get('/turmas', (req, res) => {
     res.render(path.join(__dirname, 'home.ejs'));
 });
 
