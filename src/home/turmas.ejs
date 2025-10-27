@@ -45,6 +45,52 @@
     <div class="container-fluid cards row g-4" id="cardsContainer">
       <!-- Cards inseridos via JS -->
     </div>
+
+    <!-- Modal de importação de alunos -->
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="importModalLabel">Importar Alunos</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <form id="importForm" enctype="multipart/form-data">
+              <div class="mb-3">
+                <label for="fileInput" class="form-label">Selecione um arquivo CSV ou JSON</label>
+                <input type="file" class="form-control" id="fileInput" name="file" accept=".csv,.json" required>
+                <div class="form-text">
+                  O arquivo deve seguir o formato:
+                  <br>CSV: "Matricula,Nome" (com cabeçalho)
+                  <br>JSON: Array de objetos com "matricula" e "nome"
+                </div>
+              </div>
+              
+              <div id="previewArea" class="mt-4 d-none">
+                <h6>Preview dos dados:</h6>
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Matrícula</th>
+                        <th>Nome</th>
+                      </tr>
+                    </thead>
+                    <tbody id="previewTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="importStatus" class="alert d-none mt-3"></div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="btnImportar">Importar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Bootstrap JS Bundle -->
@@ -56,6 +102,15 @@
     const toggleSidebarBtn = document.getElementById('toggleSidebar');
     const contentArea = document.getElementById('content-area');
     const sideLinks = document.querySelectorAll('#sidebar .nav-link');
+    
+    // Variáveis para importação de alunos
+    const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+    const fileInput = document.getElementById('fileInput');
+    const previewArea = document.getElementById('previewArea');
+    const previewTableBody = document.getElementById('previewTableBody');
+    const btnImportar = document.getElementById('btnImportar');
+    const importStatus = document.getElementById('importStatus');
+    let currentTurmaId = null;
 
     const instituicoesToggle = document.getElementById('instituicoesToggle');
     let instituicoesExpanded = false;
@@ -213,6 +268,105 @@
     </div>
   `;
 
+  // Função para processar o arquivo antes do envio
+  function processFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        let alunos = [];
+        if (file.name.toLowerCase().endsWith('.csv')) {
+          const lines = e.target.result.toString().split('\n');
+          const headers = lines[0].trim().split(',');
+          
+          for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const values = lines[i].trim().split(',');
+            alunos.push({
+              matricula: values[0],
+              nome: values[1]
+            });
+          }
+        } else if (file.name.toLowerCase().endsWith('.json')) {
+          alunos = JSON.parse(e.target.result);
+        }
+
+        // Mostra preview
+        previewTableBody.innerHTML = alunos
+          .map(aluno => `
+            <tr>
+              <td>${aluno.matricula}</td>
+              <td>${aluno.nome}</td>
+            </tr>
+          `).join('');
+        
+        previewArea.classList.remove('d-none');
+        importStatus.classList.add('d-none');
+      } catch (error) {
+        showImportError('Erro ao processar arquivo: ' + error.message);
+      }
+    };
+    
+    reader.readAsText(file);
+  }
+
+  // Função para mostrar erro
+  function showImportError(message) {
+    importStatus.textContent = message;
+    importStatus.classList.remove('d-none', 'alert-success');
+    importStatus.classList.add('alert-danger');
+  }
+
+  // Função para mostrar sucesso
+  function showImportSuccess(message) {
+    importStatus.textContent = message;
+    importStatus.classList.remove('d-none', 'alert-danger');
+    importStatus.classList.add('alert-success');
+  }
+
+  // Event listeners para importação
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      processFile(file);
+    }
+  });
+
+  btnImportar.addEventListener('click', async () => {
+    if (!currentTurmaId || !fileInput.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+
+    try {
+      btnImportar.disabled = true;
+      const response = await fetch(`/turmas/${currentTurmaId}/alunos/import`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        showImportSuccess(result.message || 'Alunos importados com sucesso!');
+        setTimeout(() => importModal.hide(), 2000);
+      } else {
+        showImportError(result.error || 'Erro ao importar alunos');
+      }
+    } catch (err) {
+      showImportError('Erro ao enviar arquivo');
+    } finally {
+      btnImportar.disabled = false;
+    }
+  });
+
+  // Limpar formulário quando o modal for fechado
+  document.getElementById('importModal').addEventListener('hidden.bs.modal', () => {
+    fileInput.value = '';
+    previewArea.classList.add('d-none');
+    importStatus.classList.add('d-none');
+    previewTableBody.innerHTML = '';
+  });
+
   cardAdd.onclick = () => {
     const title = prompt('Digite o nome da nova turma:');
     if (!title) return;
@@ -223,7 +377,10 @@
       id: cardsData.length + 1,
       title: title,
       descriptions: [`Código da Turma: ${code}`],
-      onClick: () => alert(`Abrindo turma: ${title}`),
+      onClick: () => {
+        currentTurmaId = code;
+        importModal.show();
+      }
     };
     cardsData.push(newCard);
 
