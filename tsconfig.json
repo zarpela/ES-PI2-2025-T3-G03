@@ -42,8 +42,6 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "moduleResolution": "Node",
-  //  "noEmit": true,
- //   "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true
   }
 }
