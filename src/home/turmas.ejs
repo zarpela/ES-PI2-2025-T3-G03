@@ -219,7 +219,7 @@
       /* Define largura fixa */
       max-width: 100%;
       /* Limita largura máxima ao contêiner */
-      height: 240px !important;
+      height: 280px !important;
     }
 
     .cards .card:hover {
@@ -363,7 +363,7 @@
     });
 
     // Marcar Instituições quando selecionada
-    
+
     const submenuLinks = instituicoesSubmenu.querySelectorAll('.nav-link');
     submenuLinks.forEach(link => {
       link.addEventListener('click', function (e) {
@@ -425,101 +425,110 @@
       },
     ];
 
-    // Cria cards dinamicamente
-    const cardsContainer = document.getElementById('cardsContainer');
+  // Função para renderizar um card novo dinamicamente
+  function renderCard(card) {
+    const col = document.createElement('div');
+    col.className = 'col-sm-6 col-md-4 col-lg-3';
 
-    cardsData.forEach(card => {
-      const col = document.createElement('div');
-      col.className = 'col-sm-6 col-md-4 col-lg-3';
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card h-100 shadow p-3';
+    cardEl.tabIndex = 0;
+    cardEl.setAttribute('role', 'button');
+    cardEl.setAttribute('aria-pressed', 'false');
 
-      // Deixa o card como um botão
-
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card h-100 shadow p-3';
-      cardEl.tabIndex = 0;
-      cardEl.setAttribute('role', 'button');
-      cardEl.setAttribute('aria-pressed', 'false');
-
-      // Adiciona o elemento de Exclusão no card
-
-      cardEl.innerHTML = `
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${card.title}</h5>
-          <div class="card-text flex-grow-1">
-            ${card.descriptions.map(desc => `<p>${desc}</p>`).join('')}
-          </div>
-          <div class="d-flex gap-2 mt-auto">
-            <button class="card-btn btn align-self-start">Abrir</button>
-            <button class="btn btn-danger btn-trash align-self-start" title="Excluir turma" aria-label="Excluir turma">
-              <!-- Ícone SVG de lata de lixo -->
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
-              </svg>
-            </button>
-          </div>
+    cardEl.innerHTML = `
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">${card.title}</h5>
+        <div class="card-text flex-grow-1">
+          ${card.descriptions.map(desc => `<p>${desc}</p>`).join('')}
         </div>
-      `;
+        <div class="d-flex gap-2 mt-auto">
+          <button class="card-btn btn align-self-start">Abrir</button>
+          <button class="btn btn-danger btn-trash align-self-start" title="Excluir turma" aria-label="Excluir turma">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
 
-      cardEl.querySelector('.btn-trash').onclick = e => {
-        // Evita a ação do card quando o "trash" (ou lixo) é clicado
-        e.stopPropagation(); 
-
-        // Simular lógica para excluir turma
-        alert(`Excluir turma: ${card.title}`);
-      };
-
-      cardEl.onclick = () => {
-        card.onClick();
-      };
-
-      cardEl.onkeypress = (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          card.onClick();
-        }
-      };
-
-      cardEl.querySelector('button').onclick = e => {
-        e.stopPropagation();
-        card.onClick();
-      };
-
-      col.appendChild(cardEl);
-      cardsContainer.appendChild(col);
-    });
-
-    // Cria uma nova div com Bootstrap 
-
-    const colAdd = document.createElement('div');
-    colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
-
-    // Cria um elemento do card
-
-    const cardAdd = document.createElement('div');
-    cardAdd.className = 'card h-100 shadow p-3 d-flex justify-content-center align-items-center text-center card-add-turma';
-    cardAdd.tabIndex = 0;
-    cardAdd.setAttribute('role', 'button');
-    cardAdd.setAttribute('aria-pressed', 'false');
-
-    cardAdd.innerHTML = `
-          <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-            <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
-            <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Turma</h5>
-            <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova turma.</p>
-          </div>
-        `;
-
-    cardAdd.onclick = () => {
-      // Simular redirecionar para página de cadastro
-      alert('Abrir cadastro de turma');
+    // Excluir card ao clicar na lata de lixo
+    cardEl.querySelector('.btn-trash').onclick = e => {
+      e.stopPropagation(); // evita disparar outros eventos
+      col.remove(); // Remove o card (coluna) do DOM
+      // Opcional: remova do array cardsData se precisar
     };
 
-    // coloca cardAdd como método filho do colAdd
-    colAdd.appendChild(cardAdd);
+    cardEl.onclick = () => {
+      card.onClick();
+    };
 
-    // Adiciona como o ultimo card
-    cardsContainer.insertBefore(colAdd, cardsContainer.lastChild); 
+    cardEl.onkeypress = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.onClick();
+      }
+    };
+
+    cardEl.querySelector('button').onclick = e => {
+      e.stopPropagation();
+      card.onClick();
+    };
+
+    col.appendChild(cardEl);
+    cardsContainer.appendChild(col);
+    return col;
+  }
+
+  // Renderiza cards iniciais
+  cardsData.forEach(card => {
+    renderCard(card);
+  });
+
+  // Card adicionar
+  const colAdd = document.createElement('div');
+  colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
+  const cardAdd = document.createElement('div');
+  cardAdd.className = 'card h-100 shadow p-3 d-flex justify-content-center align-items-center text-center card-add-turma';
+  cardAdd.tabIndex = 0;
+  cardAdd.setAttribute('role', 'button');
+  cardAdd.setAttribute('aria-pressed', 'false');
+
+  cardAdd.innerHTML = `
+    <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
+      <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
+      <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Turma</h5>
+      <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova turma.</p>
+    </div>
+  `;
+
+  cardAdd.onclick = () => {
+    const title = prompt('Digite o nome da nova turma:');
+    if (!title) return;
+    const code = prompt('Digite o código da nova turma:');
+    if (!code) return;
+
+    const newCard = {
+      id: cardsData.length + 1,
+      title: title,
+      descriptions: [`Código da Turma: ${code}`],
+      onClick: () => alert(`Abrindo turma: ${title}`),
+    };
+    cardsData.push(newCard);
+
+    // Remove temporariamente o card "Adicionar Turma"
+    cardsContainer.removeChild(colAdd);
+
+    // Renderiza novo card (fica no fim)
+    renderCard(newCard);
+
+    // Recoloca o card "Adicionar Turma" no final
     cardsContainer.appendChild(colAdd);
+  };
+
+  colAdd.appendChild(cardAdd);
+  cardsContainer.appendChild(colAdd);
 
   </script>
 
