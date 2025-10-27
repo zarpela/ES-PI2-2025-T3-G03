@@ -40,8 +40,6 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "moduleResolution": "Node",
-    "allowImportingTsExtensions": true
+    "esModuleInterop": true
   }
 }
