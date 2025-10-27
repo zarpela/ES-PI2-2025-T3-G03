@@ -17,15 +17,9 @@
   <aside id="sidebar" aria-label="Barra lateral principal">
     <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
     <nav>
-      <a href="javascript:void(0);" class="nav-link" id="instituicoesToggle" aria-expanded="false"
-        aria-controls="instituicoesSubmenu" tabindex="0">
-        Instituição
-        <span style="margin-left:auto; font-weight: 600; font-size: 0.85rem;">▸</span>
+      <a href="instituicoes" class="nav-link" id="instituicoesToggle" tabindex="0">
+        Instituições
       </a>
-
-      <div class="submenu" id="instituicoesSubmenu" aria-label="Submenu instituições">
-        <a href="#" class="nav-link" tabindex="0">Insituição 1</a>
-      </div>
 
       <a href="#" class="nav-link" tabindex="0">
         <span class="text">Disciplinas</span>
@@ -64,7 +58,6 @@
     const sideLinks = document.querySelectorAll('#sidebar .nav-link');
 
     const instituicoesToggle = document.getElementById('instituicoesToggle');
-    const instituicoesSubmenu = document.getElementById('instituicoesSubmenu');
     let instituicoesExpanded = false;
     
     // Adiciona link para os elementos da barra lateral
@@ -78,7 +71,6 @@
     // Controle do submenu "Instituições"
     instituicoesToggle.addEventListener('click', () => {
       instituicoesExpanded = !instituicoesExpanded;
-      instituicoesSubmenu.classList.toggle('show', instituicoesExpanded);
       instituicoesToggle.setAttribute('aria-expanded', instituicoesExpanded);
       instituicoesToggle.querySelector('span:last-child').textContent = instituicoesExpanded ? '▾' : '▸';
 
@@ -88,16 +80,6 @@
       } else {
         instituicoesToggle.classList.remove('active');
       }
-    });
-
-    // Marcar Instituições quando selecionada
-
-    const submenuLinks = instituicoesSubmenu.querySelectorAll('.nav-link');
-    submenuLinks.forEach(link => {
-      link.addEventListener('click', function (e) {
-        sideLinks.forEach(l => l.classList.remove('active'));
-        instituicoesToggle.classList.add('active');
-      });
     });
 
     // Barra lateral e Configuração
