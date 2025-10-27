@@ -1,12 +1,10 @@
-<!-- Desenvolvido por Murillo -->
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Home</title>
+  <title>Instituições</title>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -80,6 +78,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    text-decoration: none;
   }
 
   /* Icone no link de navegação - Deixar sem link*/
@@ -225,6 +224,17 @@
     outline: none;
   }
 
+  /* Card especial "Adicionar" */
+  .card.add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #f8fafc, #eef6ff);
+    color: #365f9a;
+    font-size: 2.6rem;
+    font-weight: 700;
+  }
+
   /* Responsividade para telas menores */
   @media (max-width: 767px) {
     /* Sidebar em mobile */
@@ -256,13 +266,10 @@
   <aside id="sidebar" aria-label="Barra lateral principal">
     <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
     <nav>
-      <!-- Transformado em link normal para a página de instituições -->
-      <a href="/instituicoes" class="nav-link" tabindex="0">
+      <!-- Link ativo para Instituições -->
+      <a href="/instituicoes" class="nav-link active" tabindex="0">
         <span class="text">Instituições</span>
       </a>
-
-      <!-- Submenu removido -->
-      <!-- ...existing code... -->
 
       <a href="#" class="nav-link" tabindex="0">
         <span class="text">Disciplinas</span>
@@ -284,11 +291,11 @@
   </button>
 
   <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
-  <h2 class="instituicao-titulo mb-4">Nome da Instituição 1</h2>
-  <div class="container-fluid cards row g-4" id="cardsContainer">
-    <!-- Cards inseridos via JS -->
-  </div>
-</main>
+    <h2 class="instituicao-titulo mb-4">Instituições</h2>
+    <div class="container-fluid cards row g-4" id="cardsContainer">
+      <!-- Cards inseridos via JS -->
+    </div>
+  </main>
 
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -319,41 +326,48 @@
       }
     });
 
-    // Dados dos cards dinâmicos
+    // Dados dos cards dinâmicos (Instituições) + card "Adicionar"
     const cardsData = [
       {
         id: 1,
-        title: 'Turma 1',
+        title: 'Instituição 1',
         descriptions: [
-          'Código da Turma: 250100'
+          'CNPJ: 12.345.678/0001-90'
         ],
-        onClick: () => alert('Gerenciar Notas')
+        onClick: () => alert('Abrir Instituição 1')
       },
       {
         id: 2,
-        title: 'Turma 2',
+        title: 'Instituição 2',
         descriptions: [
-          'Código da Turma: 250101'
+          'CNPJ: 98.765.432/0001-10'
         ],
-        description: 'Código da Turma: 250101',
-        onClick: () => alert('Relatórios')
+        onClick: () => alert('Abrir Instituição 2')
       },
       {
         id: 3,
-        title: 'Turma 3',
+        title: 'Instituição 3',
         descriptions: [
-          'Código da Turma: 250102'
+          'CNPJ: 11.222.333/0001-44'
         ],
-        onClick: () => alert('Perfil do Usuário')
+        onClick: () => alert('Abrir Instituição 3')
       },
       {
         id: 4,
-        title: 'Turma 4',
+        title: 'Instituição 4',
         descriptions: [
-          'Código da Turma: 250103',
+          'CNPJ: 55.666.777/0001-88'
         ],
-        onClick: () => alert('Configurações')
+        onClick: () => alert('Abrir Instituição 4')
       },
+      // Card de adicionar instituição
+      {
+        id: 999,
+        isAdd: true,
+        title: 'Adicionar Instituição',
+        descriptions: [],
+        onClick: () => alert('Adicionar Instituição')
+      }
     ];
 
     // Cria cards dinamicamente
@@ -369,16 +383,25 @@
       cardEl.setAttribute('role', 'button');
       cardEl.setAttribute('aria-pressed', 'false');
 
-      cardEl.innerHTML = `
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${card.title}</h5>
-          <div class="card-text flex-grow-1">
-            ${card.descriptions.map(desc => `<p>${desc}</p>`).join('')}
+      if (card.isAdd) {
+        cardEl.classList.add('add');
+        cardEl.innerHTML = `
+          <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center" aria-label="${card.title}">
+            <div style="font-size:56px; line-height:1; margin-bottom:8px;">+</div>
+            <div style="font-size:0.95rem; font-weight:600;">${card.title}</div>
           </div>
-          <button class="card-btn btn mt-auto align-self-start">Abrir</button>
-        </div>
-      `;
-
+        `;
+      } else {
+        cardEl.innerHTML = `
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${card.title}</h5>
+            <div class="card-text flex-grow-1">
+              ${card.descriptions.map(desc => `<p class="mb-1">${desc}</p>`).join('')}
+            </div>
+            <button class="card-btn btn mt-auto align-self-start">Abrir</button>
+          </div>
+        `;
+      }
 
       cardEl.onclick = () => {
         card.onClick();
@@ -391,10 +414,13 @@
         }
       };
 
-      cardEl.querySelector('button').onclick = e => {
-        e.stopPropagation();
-        card.onClick();
-      };
+      const btn = cardEl.querySelector('button');
+      if (btn) {
+        btn.onclick = e => {
+          e.stopPropagation();
+          card.onClick();
+        };
+      }
 
       col.appendChild(cardEl);
       cardsContainer.appendChild(col);

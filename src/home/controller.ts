@@ -10,4 +10,9 @@ router.get('/home', (req, res) => {
     res.render(path.join(__dirname, 'home.ejs'));
 });
 
+// Nova rota para instituições
+router.get('/instituicoes', (req, res) => {
+    res.render(path.join(__dirname, 'instituicoes.ejs'));
+});
+
 export default router;
