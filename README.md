@@ -21,5 +21,7 @@
 3. Instale as dependências necessárias executando `npm install`.  
 4. Instale o BD MySql com `npm install mysql2`.
 5. Inicie o servidor em modo de desenvolvimento com `npm run dev`.  
-6. Abra o navegador e acesse `http://localhost:3000` (a porta padrão utilizada é a 3000).
-7. Pronto! 
+6. Instale as dependências de criptografia `npm install bcryptjs jsonwebtoken`
+7. Instale as dependências de token de autenticação `npm install -D @types/bcryptjs @types/jsonwebtoken`
+8. Abra o navegador e acesse `http://localhost:3000` (a porta padrão utilizada é a 3000).
+9. Pronto! 
