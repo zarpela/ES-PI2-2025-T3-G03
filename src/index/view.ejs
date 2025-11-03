@@ -22,7 +22,7 @@
 
 <body>
   <main class="container py-5 d-flex justify-content-center align-items-center">
-    <form class="w-100" style="max-width: 400px;">
+    <form id="form-login" class="w-100" style="max-width: 400px;">
       <h1 class="mb-4 text-center">NotaDez Login</h1>
       
       <div class="mb-3">
@@ -55,9 +55,10 @@
         <a href="/usuario/recuperar-senha" class="small">Esqueci minha senha</a>
       </div>
 
-      <button type="button" id="EntrarLogin" class="btn btn-primary w-100 mb-3" onclick="window.location.href='turmas'">
+      <button type="submit" id="EntrarLogin" class="btn btn-primary w-100 mb-3">
         Entrar
       </button>
+
 
       <div class="text-center">
         <p class="mb-0">
@@ -67,5 +68,46 @@
       </div>
     </form>
   </main>
+  <script>
+        document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('form-login');
+        const emailInput = document.getElementById('EmailLogin');
+        const senhaInput = document.getElementById('SenhasLogin');
+
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const data = {
+            email: emailInput.value,
+            senha: senhaInput.value
+          };
+
+          try {
+            const response = await fetch('/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+              // Armazena o token JWT no localStorage
+              localStorage.setItem('token', result.token);
+              alert(result.message);
+              // Redireciona para a página de turmas
+              window.location.href = '/instituicoes';
+            } else {
+              // Mostra mensagem de erro do backend
+              alert(result.message);
+            }
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao fazer login. Tente novamente mais tarde.');
+          }
+        });
+      });
+  </script>
+
 </body>
 </html>

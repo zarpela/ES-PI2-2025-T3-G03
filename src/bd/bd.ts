@@ -1,22 +1,24 @@
-import { Pool } from 'pg';
+import mysql from "mysql2/promise";
 
 // Configuração da conexão
-const pool = new Pool({
-  user: 'SEU_USUARIO',
-  host: 'localhost',   // ou o host do seu banco
-  database: 'SEU_BANCO',
-  password: 'SUA_SENHA',
-  port: 5432,          // porta padrão do PostgreSQL
+export const pool = mysql.createPool({
+  host: "localhost",
+  user: "root",       // ex: "root"
+  password: "guilherme123",     // ex: ""
+  database: "notadez",       // nome do banco que você criou
+  port: 3306,                // porta padrão do MySQL
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
-// Testando a conexão
-pool.connect()
-  .then(client => {
-    console.log('Conectado ao PostgreSQL!');
-    client.release(); // libera a conexão
-  })
-  .catch(err => {
-    console.error('Erro ao conectar no PostgreSQL', err.stack);
-  });
-
-export default pool;
+// Teste da conexão
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log("✅ Conectado ao MySQL!");
+    conn.release();
+  } catch (err) {
+    console.error("❌ Erro ao conectar no MySQL:", err);
+  }
+})();
