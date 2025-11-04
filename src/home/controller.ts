@@ -6,19 +6,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
-
-
 router.get('/turmas', (req, res) => {
     res.render(path.join(__dirname, 'turmas.ejs'));
 });
+
+
 router.get('/instituicoes', (req, res) => {
     res.render(path.join(__dirname, 'instituicoes.ejs'));
 });
+// Nova rota para disciplinas
 router.get('/disciplinas', (req, res) => {
     res.render(path.join(__dirname, 'disciplinas.ejs'));
 });
-
-
 
 export default router;
