@@ -83,22 +83,41 @@
           confSenha.classList.remove('is-invalid');
           const feedback = document.getElementById('senha-mismatch-feedback');
           if (feedback) feedback.remove();
-        }
+
+          // Dados do formulário
+          const data = {
+            nome: document.getElementById('nome-cadastro').value,
+            email: document.getElementById('email-cadastro').value,
+            celular: document.getElementById('telefone-cadastro').value,
+            senha: senha.value
+          };
+
+          try {
+            const response = await fetch('usuario/cadastro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+
+            const result = await response.json();
+
+            if (response.ok) {
+              alert(result.message); // ou redireciona para login
+              form.reset();
+              window.location.href = '/login'; // se quiser redirecionar
+            } else {
+              alert(result.message);
+            }
+
+          } catch (err) {
+            console.error(err);
+            alert('Erro ao cadastrar. Tente novamente mais tarde.');
+          }
+        });
       });
+  </script>
 
-      // Reinicia evento de erro caso o usuário tente cadastrar novamente
-
-      confSenha.addEventListener('input', function () {
-        if (confSenha.classList.contains('is-invalid')) {
-          confSenha.classList.remove('is-invalid');
-          const feedback = document.getElementById('senha-mismatch-feedback');
-          if (feedback) feedback.remove();
-        }
-      });
-});
-
-
-    </script>
   </main>
 </body>
 </html>

@@ -17,6 +17,8 @@ app.use(indexRoutes);   // Usa rota index
 app.use(usuarioRoutes); // Usa rota usuário
 app.use(homeRoutes); // Usa rota home
 
+app.use("/usuario", usuarioRoutes);
+
 app.use('/public', express.static(path.resolve('public')));
 
 app.listen(port, () => {

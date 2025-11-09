@@ -3,8 +3,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto'; // Para gerar códigos aleatórios
 import transporter from '../config/mailer.ts'; // Importa o transportador de e-mail
-
+import { pool } from "../bd/bd.ts"; // ajuste para caminho correto do seu pool
 const router = express.Router();
+import bcrypt from 'bcryptjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +22,32 @@ router.get('/usuario/cadastrar', (req, res) => {
 router.get('/usuario/recuperar-senha', (req, res) => {
   res.render(path.join(__dirname, 'senha_recover.ejs'));
 });
+
+router.post("/cadastrar", async (req, res) => {
+  try {
+    const { nome, email, celular, senha } = req.body;
+
+    if (!nome || !email || !celular || !senha) {
+      return res.status(400).json({ message: "Preencha todos os campos obrigatórios." });
+    }
+
+    // Gera o hash da senha
+    const senhaHash = await bcrypt.hash(senha, 10);
+
+    // Insere o usuário no banco
+    const [result] = await pool.query(
+      "INSERT INTO usuario (nome, email, celular, senha) VALUES (?, ?, ?, ?)",
+      [nome, email, celular, senhaHash]
+    );
+
+    return res.status(201).json({ message: "Usuário cadastrado com sucesso!", id: (result as any).insertId });
+  } catch (err) {
+    console.error("Erro ao cadastrar usuário:", err);
+    return res.status(500).json({ message: "Erro ao cadastrar. Tente novamente mais tarde." });
+  }
+});
+
+
 
 // Rota para iniciar a recuperação de senha (enviar código)
 router.post('/usuario/recuperar-senha', async (req, res) => {
