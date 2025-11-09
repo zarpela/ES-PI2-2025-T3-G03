@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
     const usuarios = rows as any[];
 
     if (usuarios.length === 0) {
-      return res.status(404).json({ message: "Usuário não encontrado." });
+      return res.status(404).json({ message: "Usuário e/ou Senha incorretos." });
     }
 
     const usuario = usuarios[0];
@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
     // Compara senha
     const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
     if (!senhaCorreta) {
-      return res.status(401).json({ message: "Senha incorreta." });
+      return res.status(401).json({ message: "Usuário e/ou Senha incorretos." });
     }
 
     // Gera token JWT
