@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getDisciplinas, addDisciplina, updateDisciplina, deleteDisciplina } from '../bd/bd.ts';
-import type { Disciplina } from '../bd/bd.ts';
+import { pool } from '../bd/bd.ts';
 
 const router = express.Router();
 
@@ -23,37 +23,50 @@ router.get('/disciplinas', (req, res) => {
     res.render(path.join(__dirname, 'disciplinas.ejs'));
 });
 
+router.get('/api/instituicoes', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM instituicao');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar instituições' });
+  }
+});
+
 // API: Listar Disciplinas
 router.get('/api/disciplinas', async (req, res) => {
     try {
-        const disciplinas = await getDisciplinas();
-        res.json(disciplinas);
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao buscar disciplinas.' });
-    }
+    const [rows] = await pool.query('SELECT * FROM disciplina');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar disciplina' });
+  }
 });
 
 // API: Adicionar disciplina
-router.post('/api/disciplinas', async (req, res) => {
-    try {
-        const data: Disciplina = req.body;
-        const result = await addDisciplina(data);
-        res.status(201).json(result);
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao adicionar disciplina.' });
-    }
+router.get('/api/disciplinas', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM disciplina');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar disciplinas' });
+  }
 });
 
 // API: Editar disciplina
 router.put('/api/disciplinas/:id', async (req, res) => {
-    try {
-        const id = Number(req.params.id);
-        const data: Disciplina = req.body;
-        await updateDisciplina(id, data);
-        res.json({ id });
-    } catch (err) {
-        res.status(500).json({ error: 'Erro ao editar disciplina.' });
-    }
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) throw new Error("ID inválido");
+    const data = req.body;
+    await updateDisciplina(id, data);
+    res.json({ id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao editar disciplina.' });
+  }
 });
 
 // API: Deletar disciplina
