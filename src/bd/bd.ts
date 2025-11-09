@@ -1,12 +1,14 @@
 import mysql from "mysql2/promise";
+import dotenv from 'dotenv';
 
-// Configuração da conexão
+dotenv.config();
+
 export const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",       // ex: "root"
-  password: "",     // ex: ""
-  database: "notadez",       // nome do banco que você criou
-  port: 3306,                // porta padrão do MySQL
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "",
+  port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -41,11 +43,11 @@ export interface Disciplina {
 }
 
 export async function addDisciplina({ nome, sigla, codigo, periodo, curso_id, usuario_id }: Disciplina) {
-  const [result] = await pool.query(
-    'INSERT INTO disciplina (nome, sigla, codigo, periodo, curso_id, usuario_id) VALUES (?, ?, ?, ?, ?, ?)',
-    [nome, sigla, codigo, periodo, curso_id, usuario_id]
-  );
-  return { id: result.insertId };
+  const [result] = await pool.query(
+    'INSERT INTO disciplina (nome, sigla, codigo, periodo, curso_id, usuario_id) VALUES (?, ?, ?, ?, ?, ?)',
+    [nome, sigla, codigo, periodo, curso_id, usuario_id]
+  );
+  return { id: (result as any).insertId };
 }
 
 
@@ -61,3 +63,6 @@ export async function deleteDisciplina(id: number) {
   await pool.query('DELETE FROM disciplina WHERE id=?', [id]);
   return { id };
 }
+
+
+

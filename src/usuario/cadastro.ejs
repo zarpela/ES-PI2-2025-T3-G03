@@ -22,7 +22,7 @@
 
 <body>
   <main class="container py-5 d-flex justify-content-center align-items-center">
-    <form class="w-100" style="max-width: 400px;">
+    <form id="form-cadastro" class="w-100" style="max-width: 400px;">
       <h1 class="mb-4 text-center">NotaDez Cadastro</h1>
       
       <div class="mb-3">
@@ -58,28 +58,28 @@
     </form>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('form-cadastro');
+        const senha = document.getElementById('senha-cadastro');
+        const confSenha = document.getElementById('conf-senha-cadastro');
 
-      document.addEventListener('DOMContentLoaded', function () {
-      const form = document.querySelector('form');
-      const senha = document.getElementById('senha-cadastro');
-      const confSenha = document.getElementById('conf-senha-cadastro');
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault(); // evita envio padrão do formulário
 
-      // Evento de validação de senha, caso esteja errado muda a orda para vermelha.
-
-      form.addEventListener('submit', function (e) {
-        if (senha.value !== confSenha.value) {
-          // Impede o envio do formulário
-          e.preventDefault();
-          confSenha.classList.add('is-invalid');
-          if (!document.getElementById('senha-mismatch-feedback')) {
-            const feedback = document.createElement('div');
-            feedback.className = 'invalid-feedback';
-            feedback.id = 'senha-mismatch-feedback';
-            feedback.textContent = 'Senhas diferentes';
-            confSenha.parentNode.appendChild(feedback);
+          // Validação de senha
+          if (senha.value !== confSenha.value) {
+            confSenha.classList.add('is-invalid');
+            if (!document.getElementById('senha-mismatch-feedback')) {
+              const feedback = document.createElement('div');
+              feedback.className = 'invalid-feedback';
+              feedback.id = 'senha-mismatch-feedback';
+              feedback.textContent = 'Senhas diferentes';
+              confSenha.parentNode.appendChild(feedback);
+            }
+            confSenha.focus();
+            return;
           }
-          confSenha.focus();
-        } else {
+
           confSenha.classList.remove('is-invalid');
           const feedback = document.getElementById('senha-mismatch-feedback');
           if (feedback) feedback.remove();
@@ -93,7 +93,7 @@
           };
 
           try {
-            const response = await fetch('usuario/cadastro', {
+            const response = await fetch('cadastrar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -105,7 +105,7 @@
             if (response.ok) {
               alert(result.message); // ou redireciona para login
               form.reset();
-              window.location.href = '/login'; // se quiser redirecionar
+              window.location.href = '/'; // se quiser redirecionar
             } else {
               alert(result.message);
             }

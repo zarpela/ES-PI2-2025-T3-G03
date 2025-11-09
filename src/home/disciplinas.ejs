@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>disciplinas</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/public/homecss.css" rel="stylesheet">
+
+</head>
+
+<body>
+  <aside id="sidebar" aria-label="Barra lateral principal">
+    <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
+    <nav>
+      <!-- Link ativo para Instituições -->
+      <a href="/instituicoes" class="nav-link active" tabindex="0">
+        <span class="text">Instituições</span>
+      </a>
+
+      <a href="/disciplinas" class="nav-link" tabindex="0">
+        <span class="text">Disciplinas</span>
+      </a>
+
+      <a href="turmas" class="nav-link" tabindex="0">
+        <span class="text">Turmas</span>
+      </a>
+
+      <a href="#" class="nav-link" tabindex="0">
+        <span class="text">Gerenciar Turmas</span>
+      </a>
+
+    </nav>
+  </aside>
+
+  <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
+    ←
+  </button>
+
+  <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
+    <h2 class="instituicao-titulo mb-4">Disciplinas</h2>
+    <div class="container-fluid cards row g-4" id="cardsContainer">
+      <!-- Cards inseridos via JS -->
+    </div>
+  </main>
+
+  <!-- Modal Disciplina -->
+  <div class="modal fade" id="disciplinaModal" tabindex="-1" aria-labelledby="disciplinaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="disciplinaForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="disciplinaModalLabel">Adicionar Disciplina</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="disciplinaId">
+            <div class="mb-3">
+              <label for="disciplinaNome" class="form-label">Nome</label>
+              <input type="text" class="form-control" id="disciplinaNome" required>
+            </div>
+            <div class="mb-3">
+              <label for="disciplinaSigla" class="form-label">Sigla</label>
+              <input type="text" class="form-control" id="disciplinaSigla">
+            </div>
+            <div class="mb-3">
+              <label for="disciplinaCodigo" class="form-label">Código</label>
+              <input type="text" class="form-control" id="disciplinaCodigo">
+            </div>
+            <div class="mb-3">
+              <label for="disciplinaPeriodo" class="form-label">Período</label>
+              <input type="text" class="form-control" id="disciplinaPeriodo">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    const contentArea = document.getElementById('content-area');
+    const sideLinks = document.querySelectorAll('#sidebar .nav-link');
+
+    // Mantém apenas seleção visual dos links (sem submenu)
+    sideLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        sideLinks.forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    toggleSidebarBtn.addEventListener('click', () => {
+      const collapsed = sidebar.classList.toggle('collapsed');
+      if (collapsed) {
+        toggleSidebarBtn.classList.add('collapsed');
+        toggleSidebarBtn.innerHTML = '▶ Mostrar';
+        contentArea.classList.add('expanded');
+      } else {
+        toggleSidebarBtn.classList.remove('collapsed');
+        toggleSidebarBtn.innerHTML = '←';
+        contentArea.classList.remove('expanded');
+      }
+    });
+
+    // CRUD Disciplinas via API
+    const cardsContainer = document.getElementById('cardsContainer');
+
+    function renderCard(disciplina) {
+      const col = document.createElement('div');
+      col.className = 'col-sm-6 col-md-4 col-lg-3';
+
+      const cardEl = document.createElement('div');
+      cardEl.className = 'card h-100 shadow p-3';
+      cardEl.tabIndex = 0;
+      cardEl.setAttribute('role', 'button');
+      cardEl.setAttribute('aria-pressed', 'false');
+
+      cardEl.innerHTML = `
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${disciplina.nome}</h5>
+          <div class="card-text flex-grow-1">
+            <p><b>Sigla:</b> ${disciplina.sigla || ''}</p>
+            <p><b>Código:</b> ${disciplina.codigo || ''}</p>
+            <p><b>Período:</b> ${disciplina.periodo || ''}</p>
+          </div>
+          <div class="d-flex gap-2 mt-auto">
+            <button class="btn btn-primary btn-edit align-self-start">Editar</button>
+            <button class="btn btn-danger btn-trash align-self-start" title="Excluir disciplina" aria-label="Excluir disciplina">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 23 24">
+                <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Editar disciplina
+      cardEl.querySelector('.btn-edit').onclick = e => {
+        e.stopPropagation();
+        openDisciplinaModal('edit', disciplina);
+      };
+
+      // Excluir disciplina
+      cardEl.querySelector('.btn-trash').onclick = async e => {
+        e.stopPropagation();
+        if (confirm('Deseja excluir esta disciplina?')) {
+          await fetch(`/api/disciplinas/${disciplina.id}`, { method: 'DELETE' });
+          loadDisciplinas();
+        }
+      };
+
+      col.appendChild(cardEl);
+      cardsContainer.appendChild(col);
+      return col;
+    }
+
+    // Modal para adicionar/editar disciplina (Bootstrap)
+    const disciplinaModal = new bootstrap.Modal(document.getElementById('disciplinaModal'));
+    const disciplinaForm = document.getElementById('disciplinaForm');
+    const disciplinaId = document.getElementById('disciplinaId');
+    const disciplinaNome = document.getElementById('disciplinaNome');
+    const disciplinaSigla = document.getElementById('disciplinaSigla');
+    const disciplinaCodigo = document.getElementById('disciplinaCodigo');
+    const disciplinaPeriodo = document.getElementById('disciplinaPeriodo');
+    let editMode = false;
+
+    function openDisciplinaModal(mode, disciplina = {}) {
+      editMode = mode === 'edit';
+      document.getElementById('disciplinaModalLabel').textContent = editMode ? 'Editar Disciplina' : 'Adicionar Disciplina';
+      disciplinaId.value = disciplina.id || '';
+      disciplinaNome.value = disciplina.nome || '';
+      disciplinaSigla.value = disciplina.sigla || '';
+      disciplinaCodigo.value = disciplina.codigo || '';
+      disciplinaPeriodo.value = disciplina.periodo || '';
+      disciplinaModal.show();
+    }
+
+    disciplinaForm.onsubmit = async function(e) {
+      e.preventDefault();
+      const data = {
+        nome: disciplinaNome.value,
+        sigla: disciplinaSigla.value,
+        codigo: disciplinaCodigo.value,
+        periodo: disciplinaPeriodo.value
+      };
+      if (editMode && disciplinaId.value) {
+        await fetch(`/api/disciplinas/${disciplinaId.value}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else {
+        await fetch('/api/disciplinas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      }
+      disciplinaModal.hide();
+      loadDisciplinas();
+    };
+
+    // Card adicionar disciplina
+    function renderAddCard() {
+      const colAdd = document.createElement('div');
+      colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
+      const cardAdd = document.createElement('div');
+      cardAdd.className = 'card h-100 shadow p-3 d-flex justify-content-center align-items-center text-center card-add-disciplina';
+      cardAdd.tabIndex = 0;
+      cardAdd.setAttribute('role', 'button');
+      cardAdd.setAttribute('aria-pressed', 'false');
+
+      cardAdd.innerHTML = `
+        <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
+          <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
+          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Disciplina</h5>
+          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova disciplina.</p>
+        </div>
+      `;
+      cardAdd.onclick = () => openDisciplinaModal('add');
+      colAdd.appendChild(cardAdd);
+      cardsContainer.appendChild(colAdd);
+    }
+
+    // Carregar disciplinas do backend
+    async function loadDisciplinas() {
+      cardsContainer.innerHTML = '';
+      try {
+        const res = await fetch('/api/disciplinas');
+        if (!res.ok) throw new Error('Erro ao buscar disciplinas');
+        const disciplinas = await res.json();
+        
+        if (disciplinas.length === 0) {
+          const emptyMessage = document.createElement('div');
+          emptyMessage.className = 'col-12 text-center my-5';
+          emptyMessage.innerHTML = `
+            <h4 class="text-muted mb-3">Nenhuma disciplina cadastrada</h4>
+            <p class="text-muted">Clique no botão "+" para adicionar uma nova disciplina.</p>
+          `;
+          cardsContainer.appendChild(emptyMessage);
+        } else {
+          disciplinas.forEach(renderCard);
+        }
+        renderAddCard();
+      } catch (error) {
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'col-12 text-center my-5 text-danger';
+        errorMessage.innerHTML = `
+          <h4>Erro ao carregar disciplinas</h4>
+          <p>Por favor, tente novamente mais tarde.</p>
+        `;
+        cardsContainer.appendChild(errorMessage);
+        console.error('Erro ao carregar disciplinas:', error);
+      }
+    }
+
+    // Inicialização
+    loadDisciplinas();
+  </script>
+
+</body>
+
+</html>
