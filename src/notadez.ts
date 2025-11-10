@@ -9,6 +9,7 @@ import usuarioRoutes from "./usuario/controller.ts"; // Importa rota usuário
 import homeRoutes from "./home/controller.ts"; // Importa rota home
 
 const app = express();
+app.use(express.json());
 const port = 3000;
 
 app.use(express.json()); // Adiciona o middleware para parsear JSON

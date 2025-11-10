@@ -45,13 +45,14 @@ router.get('/api/disciplinas', async (req, res) => {
 });
 
 // API: Adicionar disciplina
-router.get('/api/disciplinas', async (req, res) => {
+router.post('/api/disciplinas', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM disciplina');
-    res.json(rows);
+    const data = req.body; // dados da nova disciplina enviados pelo cliente
+    const result = await addDisciplina(data); // função para inserir no banco
+    res.status(201).json(result); // retorna a disciplina criada com status 201
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erro ao buscar disciplinas' });
+    res.status(500).json({ error: 'Erro ao adicionar disciplina' });
   }
 });
 

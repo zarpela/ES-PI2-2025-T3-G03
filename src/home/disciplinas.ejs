@@ -192,7 +192,9 @@
         nome: disciplinaNome.value,
         sigla: disciplinaSigla.value,
         codigo: disciplinaCodigo.value,
-        periodo: disciplinaPeriodo.value
+        periodo: disciplinaPeriodo.value,
+        curso_id: 1,    // fixo
+        usuario_id: 1   // fixo
       };
       if (editMode && disciplinaId.value) {
         await fetch(`/api/disciplinas/${disciplinaId.value}`, {
