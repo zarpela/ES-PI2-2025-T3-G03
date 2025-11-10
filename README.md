@@ -19,9 +19,9 @@
 1. Clone este repositório com `git clone https://github.com/zarpela/ES-PI2-2025-T3-G03.git` ou crie um repositório manualmente e copie os arquivos.  
 2. Acesse a pasta do projeto pelo terminal.  
 3. Instale as dependências necessárias executando `npm install`.  
-4. Instale o BD MySql com `npm install mysql2`.
-5. Inicie o servidor em modo de desenvolvimento com `npm run dev`.  
-6. Instale as dependências de criptografia `npm install bcryptjs jsonwebtoken`
-7. Instale as dependências de token de autenticação `npm install -D @types/bcryptjs @types/jsonwebtoken`
+4. Instale o BD MySql com `npm install mysql2`. 
+5. Instale as dependências de criptografia `npm install bcryptjs jsonwebtoken`
+6. Instale as dependências de token de autenticação `npm install -D @types/bcryptjs @types/jsonwebtoken`
+7. Inicie o servidor em modo de desenvolvimento com `npm run dev`. 
 8. Abra o navegador e acesse `http://localhost:3000` (a porta padrão utilizada é a 3000).
 9. Pronto! 
