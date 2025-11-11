@@ -26,7 +26,7 @@
       <h1 class="mb-4 text-center">NotaDez Cadastro</h1>
       
       <div class="mb-3">
-        <label for="nome-cadastro" class="form-label">Nome *</label>
+        <label for="nome-cadastro" class="form-label">Nome Completo*</label>
         <input type="text" class="form-control" id="nome-cadastro" placeholder="Digite seu o nome completo" required/>
       </div>
 
@@ -37,7 +37,8 @@
 
       <div class="mb-3">
         <label for="telefone-cadastro" class="form-label">Telefone *</label>
-        <input type="tel" class="form-control" id="telefone-cadastro" placeholder="(xx) xxxxx-xxxx" required pattern="\(\d{2}\)\s?\d{4,5}-\d{4}"  maxlength="15"  title="Digite o telefone no formato (XX) XXXXX-XXXX" />
+        <input type="tel" class="form-control" id="telefone-cadastro" placeholder="(xx) xxxxx-xxxx" required maxlength="15"  title="Digite o telefone no formato (XX) XXXXX-XXXX" />
+
       </div>
 
       <div class="mb-4">
@@ -60,6 +61,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('form-cadastro');
+        const telefone = document.getElementById('telefone-cadastro');
         const senha = document.getElementById('senha-cadastro');
         const confSenha = document.getElementById('conf-senha-cadastro');
 
@@ -83,6 +85,24 @@
           confSenha.classList.remove('is-invalid');
           const feedback = document.getElementById('senha-mismatch-feedback');
           if (feedback) feedback.remove();
+          
+          // Validação do telefone
+          const telefoneRegex = /^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/;
+            if (!telefoneRegex.test(telefone.value)) {
+              telefone.classList.add('is-invalid');
+              if (!document.getElementById('telefone-feedback')) {
+                const feedbackTel = document.createElement('div');
+                feedbackTel.className = 'invalid-feedback';
+                feedbackTel.id = 'telefone-feedback';
+                feedbackTel.textContent = 'Telefone inválido. Insira um formato válido.';
+                telefone.parentNode.appendChild(feedbackTel);
+              }
+              telefone.focus();
+              return;
+            }
+          telefone.classList.remove('is-invalid');
+          const feedbackTel = document.getElementById('telefone-feedback');
+          if (feedbackTel) feedbackTel.remove();
 
           // Dados do formulário
           const data = {
