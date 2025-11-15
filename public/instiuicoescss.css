@@ -1,0 +1,163 @@
+body {
+  background: #FAFCF7;
+  font-family: 'Inter', Arial, sans-serif;
+  color: #13342b;
+  margin: 0;
+}
+
+.dashboard-main {
+  max-width: 960px;
+  margin: 48px auto 0 auto;
+  padding: 0 16px;
+}
+
+.dashboard-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 0.6em;
+  text-align: center;
+}
+
+.dashboard-desc {
+  text-align: center;
+  color: #6a7972;
+  font-size: 1.07rem;
+  margin-bottom: 2em;
+}
+
+.instituicoes-header {
+  font-weight: 600;
+  font-size: 1.24rem;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.instituicoes-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  justify-content: center;
+  margin-bottom: 36px;
+  min-height: 170px;
+  align-items: stretch;
+}
+
+.card-dashboard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%;
+}
+
+.card-dashboard .actions {
+  margin-top: auto; /* Empurra o bloco para a base do card */
+}
+
+/* 3 cards por linha em desktop */
+.card-dashboard,
+.card-add-dashboard {
+  flex: 1 1 29%;
+  max-width: 31%;
+  min-width: 300px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #E9EAE7;
+  border-radius: 12px;
+  padding: 22px 18px 17px 18px;
+  box-shadow: 0 1px 8px rgb(0 0 0 / 0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  transition: box-shadow 0.2s;
+  height: 205px;
+}
+
+.card-dashboard .title {
+  font-weight: 600;
+  font-size: 1.13rem;
+  margin-bottom: 7px;
+  color: #357b6c;
+}
+
+.card-dashboard .desc {
+  font-size: 0.99rem;
+  color: #7e8a80;
+  margin-bottom: 12px;
+}
+
+.card-dashboard .badges {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.badge-custom {
+  background: #f7ede3;
+  color: #ad7e4d;
+  font-size: 0.98rem;
+  border-radius: 6px;
+  padding: 2px 10px;
+}
+
+.card-dashboard .actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  width: 100%;
+  justify-content: center; /* Centraliza os botões */
+}
+
+.card-dashboard .actions button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 36px; /* altura fixa para todos os botões */
+  white-space: nowrap; /* impede quebra de texto */
+  padding: 0 15px;
+}
+
+.btn-slim {
+  padding: 7px 17px;
+  border-radius: 6px !important;
+  font-size: 0.99rem;
+  min-width: 70px;
+}
+
+.btn-abrir { background: #2563EB; color:#fff;}
+.btn-abrir:hover { background: #1d4ed8; }
+.btn-editar { background: #e1e7cd; color: #324713; }
+.btn-editar:hover { background: #d2dfac; color: #181f13; }
+.btn-deletar { background: #fff0ea; color: #c34b37; }
+.btn-deletar:hover { background: #ffe2d5; }
+
+/* Card de adicionar */
+.card-add-dashboard {
+  border: 2px dashed #656665;
+  box-shadow: 0 1px 6px rgb(0 0 0 / 0.06);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 22px 0 22px 0;
+  color: #656665;
+  transition: background 0.2s;
+}
+.card-add-dashboard:hover {background: #f0f0f0bb;}
+.card-add-dashboard .plus {font-size: 2.1rem;font-weight: 700;}
+.card-add-dashboard .title {margin: 9px 0 4px 0; font-weight: 600;}
+.card-add-dashboard .desc {font-size: 0.97rem;color: #656665;}
+
+/* Responsivo para tablets e celulares */
+@media (max-width: 1100px) {
+  .card-dashboard,
+  .card-add-dashboard {
+    max-width: 48%;
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-main{padding:0;}
+  .instituicoes-wrapper{gap:12px;}
+  .card-dashboard, .card-add-dashboard {max-width: 95vw; min-width: 90vw;}
+}

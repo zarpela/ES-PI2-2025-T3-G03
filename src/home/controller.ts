@@ -5,11 +5,15 @@ import { fileURLToPath } from "url";
 import { getDisciplinas, addDisciplina, updateDisciplina, deleteDisciplina } from "../bd/bd.ts";
 import { pool } from "../bd/bd.ts";
 import { authenticateToken } from "../usuario/authUsers.ts";
+import type { RowDataPacket } from 'mysql2';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const JWT_SECRET = "segredo_super_secreto"; // coloque em variável de ambiente (.env);
 
 // Tipagem do req.user para TypeScript
 declare global {
@@ -23,6 +27,11 @@ declare global {
     }
   }
 }
+
+router.get('/api/usuario', authenticateToken, (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Usuário não autenticado' });
+  res.json({ nome: req.user.nome });
+});
 
 // ROTAS DE PÁGINAS
 router.get('/instituicoes', (req, res) => {
@@ -99,25 +108,90 @@ router.delete('/api/disciplinas/:id', authenticateToken, async (req, res) => {
 });
 
 // INSTITUICOES (dados globais - sem autenticação obrigatória para leitura)
-router.get('/api/instituicoes', async (req, res) => {
+router.get('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM instituicao');
+    const userId = req.user?.id;
+    const [rows] = await pool.query('SELECT * FROM instituicao WHERE usuario_id = ?', [userId]);
     res.json(rows);
   } catch (err) {
+    console.error('Erro no get instituicoes:', err);
     res.status(500).json({ error: 'Erro ao buscar instituições' });
   }
 });
 
+
+// Rota para mostrar página da instituição específica
+router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
+  const instituicaoId = req.params.id;
+  const userId = req.user?.id;
+
+  try {
+    // Busca instituição do usuário
+    const [instituicaoRows] = await pool.query(
+      'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?', 
+      [instituicaoId, userId]
+    );
+    const instituicao = (instituicaoRows as any[])[0];
+    if (!instituicao) return res.status(404).send('Instituição não encontrada');
+
+    // Busca cursos da instituição que pertencem ao usuário
+    const [cursoRows] = await pool.query(`
+      SELECT c.* FROM curso c
+      JOIN instituicao i ON i.id = c.instituicao_id
+      WHERE c.instituicao_id = ? AND i.usuario_id = ?
+    `, [instituicaoId, userId]);
+
+    res.render('instituicao', { instituicao, cursos: cursoRows });
+  } catch (err) {
+    res.status(500).send('Erro ao buscar instituição ou cursos');
+  }
+});
+
+
 router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
+    const userId = req.user?.id;
     const data = req.body;
-    const [result] = await pool.query('INSERT INTO instituicao (nome) VALUES (?)', [data.nome]);
+    const [result] = await pool.query('INSERT INTO instituicao (nome, usuario_id) VALUES (?, ?)', [data.nome, userId]);
     const insertId = (result as any).insertId;
     res.status(201).json({ id: insertId, nome: data.nome });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao adicionar instituição' });
   }
 });
+
+// Rota API para buscar instituição específica com cursos
+router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
+  const id = req.params.id;
+  const userId = req.user?.id;
+
+  try {
+    // Busca instituição do usuário
+    const [instituicaoRows] = await pool.query(
+      'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?',
+      [id, userId]
+    );
+    
+    if (!instituicaoRows || (instituicaoRows as any[]).length === 0) {
+      return res.status(404).json({ error: 'Instituição não encontrada' });
+    }
+
+    const instituicao = (instituicaoRows as any[])[0];
+
+    // Busca cursos da instituição
+    const [cursoRows] = await pool.query(`
+      SELECT c.* FROM curso c
+      JOIN instituicao i ON i.id = c.instituicao_id
+      WHERE c.instituicao_id = ? AND i.usuario_id = ?
+    `, [id, userId]);
+
+    res.json({ instituicao, cursos: cursoRows || [] });
+  } catch (err) {
+    console.error('Erro ao buscar instituição:', err);
+    res.status(500).json({ error: 'Erro ao buscar instituição ou cursos' });
+  }
+});
+
 
 router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
@@ -141,6 +215,55 @@ router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
 });
 
 // CURSOS - vinculados com instituição
+
+router.get('/cursos/:id', async (req, res) => {
+  const instituicaoId = req.params.id;
+  const token = req.query.token as string;
+
+  console.log('=== INICIANDO ROTA /cursos/:id ===');
+  console.log('instituicaoId:', instituicaoId);
+  console.log('token recebido:', token ? 'SIM' : 'NÃO');
+
+  if (!token) {
+    console.log('Erro: Token não fornecido');
+    return res.status(401).send('Token não fornecido. Acesso negado.');
+  }
+
+  let userId: number;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    userId = decoded.id;
+  } catch (err) {
+    return res.status(403).send('Token inválido ou expirado. Acesso negado.');
+  }
+
+  try {
+    console.log('Buscando instituição:', instituicaoId, 'usuario_id:', userId);
+    const [institutionRows] = await pool.query<RowDataPacket[]>(
+      'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?',
+      [instituicaoId, userId]
+    );
+
+    if (institutionRows.length === 0) {
+      return res.status(403).send('Você não tem permissão para acessar esta instituição.');
+    }
+
+    const instituicao = institutionRows[0];
+
+    const [cursoRows] = await pool.query<RowDataPacket[]>(
+      `SELECT c.* FROM curso c
+       JOIN instituicao i ON i.id = c.instituicao_id
+       WHERE c.instituicao_id = ? AND i.usuario_id = ?`,
+      [instituicaoId, userId]
+    );
+
+    res.render('cursos', { instituicao, cursos: cursoRows || [] });
+  } catch (err) {
+    res.status(500).send('Erro ao buscar cursos da instituição');
+  }
+});
+
+
 router.get('/api/cursos', async (req, res) => {
   try {
     const [rows] = await pool.query(`
