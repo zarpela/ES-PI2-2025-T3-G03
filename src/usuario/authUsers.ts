@@ -1,6 +1,6 @@
 //Desenvolvido por Guilherme Henrique Moreira
 import { Router } from "express";
-import { pool } from "../bd/bd.ts";
+import { pool } from "../repository/bd.ts";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "jsonwebtoken";

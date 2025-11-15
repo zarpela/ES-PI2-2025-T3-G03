@@ -29,7 +29,7 @@ export const pool = mysql.createPool({
 // CRUD de Disciplinas
 export async function getDisciplinas() {
   const [rows] = await pool.query('SELECT * FROM disciplina');
-  alert(rows);
+  console.log(rows);
   return rows;
   
 }

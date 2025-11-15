@@ -2,8 +2,8 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import { getDisciplinas, addDisciplina, updateDisciplina, deleteDisciplina } from "../bd/bd.ts";
-import { pool } from "../bd/bd.ts";
+import { getDisciplinas, addDisciplina, updateDisciplina, deleteDisciplina } from "../repository/bd.ts";
+import { pool } from "../repository/bd.ts";
 import { authenticateToken } from "../usuario/authUsers.ts";
 
 const router = express.Router();
