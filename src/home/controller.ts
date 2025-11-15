@@ -1,3 +1,4 @@
+//Desenvolvido por Rafael Henrique dos Santos Inácio
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -36,6 +37,9 @@ router.get('/turmas', (req, res) => {
   res.render(path.join(__dirname, 'turmas.ejs'));
 });
 
+router.get('/cursos', (req, res) => {
+  res.render(path.join(__dirname, 'cursos.ejs'));
+});
 
 // DISCIPLINAS COM USUÁRIO
 router.get('/api/disciplinas', authenticateToken, async (req, res) => {
@@ -94,7 +98,7 @@ router.delete('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// INSTITUICOES SEM USUARIO (dados globais)
+// INSTITUICOES (dados globais - sem autenticação obrigatória para leitura)
 router.get('/api/instituicoes', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT * FROM instituicao');
@@ -109,13 +113,12 @@ router.post('/api/instituicoes', authenticateToken, async (req, res) => {
     const data = req.body;
     const [result] = await pool.query('INSERT INTO instituicao (nome) VALUES (?)', [data.nome]);
     const insertId = (result as any).insertId;
-    res.status(201).json({ id: insertId, ...data });
+    res.status(201).json({ id: insertId, nome: data.nome });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao adicionar instituição' });
   }
 });
 
-// PUT e DELETE para instituicao (sem usuário, aberto ou protegido conforme estratégia)
 router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -137,6 +140,58 @@ router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// CURSOS - vinculados com instituição
+router.get('/api/cursos', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT c.*, i.nome AS instituicao_nome
+      FROM curso c
+      LEFT JOIN instituicao i ON c.instituicao_id = i.id
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar cursos' });
+  }
+});
+
+router.post('/api/cursos', authenticateToken, async (req, res) => {
+  try {
+    const data = req.body;
+    const [result] = await pool.query(
+      'INSERT INTO curso (nome, instituicao_id) VALUES (?, ?)', 
+      [data.nome, data.instituicao_id || null]
+    );
+    const insertId = (result as any).insertId;
+    res.status(201).json({ id: insertId, nome: data.nome, instituicao_id: data.instituicao_id || null });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao adicionar curso' });
+  }
+});
+
+router.put('/api/cursos/:id', authenticateToken, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const data = req.body;
+    await pool.query(
+      'UPDATE curso SET nome = ?, instituicao_id = ? WHERE id = ?', 
+      [data.nome, data.instituicao_id || null, id]
+    );
+    res.json({ id });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao editar curso.' });
+  }
+});
+
+router.delete('/api/cursos/:id', authenticateToken, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await pool.query('DELETE FROM curso WHERE id = ?', [id]);
+    res.json({ id });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao deletar curso.' });
+  }
+});
+
 // TURMAS via join com disciplina para usuário
 router.get('/api/turmas', authenticateToken, async (req, res) => {
   try {
@@ -155,7 +210,6 @@ router.get('/api/turmas', authenticateToken, async (req, res) => {
 router.post('/api/turmas', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
-    // turma não tem usuário, passa disciplina_id
     const [result] = await pool.query(
       'INSERT INTO turma (codigo, nome, apelido, disciplina_id) VALUES (?, ?, ?, ?)',
       [data.codigo, data.nome, data.apelido || null, data.disciplina_id]
@@ -171,7 +225,6 @@ router.put('/api/turmas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
     const userId = req.user?.id;
-    // Confere se turma pertence a disciplina do usuário
     const [rows] = await pool.query(`
       SELECT turma.* FROM turma
       JOIN disciplina ON turma.disciplina_id = disciplina.id
@@ -192,7 +245,6 @@ router.delete('/api/turmas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
     const userId = req.user?.id;
-    // Confere se turma pertence a disciplina do usuário
     const [rows] = await pool.query(`
       SELECT disciplina.usuario_id FROM turma 
       JOIN disciplina ON turma.disciplina_id = disciplina.id
@@ -204,6 +256,22 @@ router.delete('/api/turmas/:id', authenticateToken, async (req, res) => {
     res.json({ id });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao deletar turma.' });
+  }
+});
+
+// Rota para obter turmas por disciplina
+router.get('/api/turmas/disciplinas/:id', authenticateToken, async (req, res) => {
+  try {
+    const disciplinaId = Number(req.params.id);
+    const userId = req.user?.id;
+    const [rows] = await pool.query(`
+      SELECT turma.* FROM turma
+      JOIN disciplina ON turma.disciplina_id = disciplina.id
+      WHERE disciplina.id = ? AND disciplina.usuario_id = ?
+    `, [disciplinaId, userId]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar turmas por disciplina' });
   }
 });
 

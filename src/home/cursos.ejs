@@ -1,10 +1,10 @@
-<!--Desenvolvido por Murillo Iamarino Caravita-->
+<!--Desenvolvido por Rafael Henrique dos Santos inácio-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Turmas</title>
+  <title>Cursos</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/public/homecss.css" rel="stylesheet">
   <style>
@@ -35,9 +35,9 @@
     <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
     <nav>
       <a href="/instituicoes" class="nav-link" tabindex="0"><span class="text">Instituições</span></a>
-      <a href="/cursos" class="nav-link" tabindex="0"><span class="text">Cursos</span></a>
+      <a href="/cursos" class="nav-link active" tabindex="0"><span class="text">Cursos</span></a>
       <a href="/disciplinas" class="nav-link" tabindex="0"><span class="text">Disciplinas</span></a>
-      <a href="/turmas" class="nav-link active" tabindex="0"><span class="text">Turmas</span></a>
+      <a href="/turmas" class="nav-link" tabindex="0"><span class="text">Turmas</span></a>
       <a href="#" class="nav-link" tabindex="0"><span class="text">Gerenciar Turmas</span></a>
     </nav>
   </aside>
@@ -45,12 +45,12 @@
   <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">←</button>
 
   <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
-    <h2 class="instituicao-titulo mb-4">Turmas</h2>
+    <h2 class="instituicao-titulo mb-4">Cursos</h2>
     <div class="container-fluid cards row g-4" id="cardsContainer"></div>
   </main>
 
   <!-- Botão de Voltar -->
-  <button id="btnVoltar" class="btn btn-secondary btn-voltar" title="Voltar para Disciplinas" aria-label="Voltar para a página de Disciplinas">
+  <button id="btnVoltar" class="btn btn-secondary btn-voltar" title="Voltar para Instituições" aria-label="Voltar para a página de Instituições">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
       <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z"/>
     </svg>
@@ -87,11 +87,11 @@
 
     // Botão de voltar
     btnVoltar.addEventListener('click', () => {
-      window.location.href = '/disciplinas';
+      window.location.href = '/instituicoes';
     });
 
-    // Função para renderizar cada card de turma
-    function renderCard(turma) {
+    // Função para renderizar cada card de curso
+    function renderCard(card) {
       const col = document.createElement('div');
       col.className = 'col-sm-6 col-md-4 col-lg-3';
 
@@ -103,12 +103,12 @@
 
       cardEl.innerHTML = `
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${turma.nome}</h5>
+          <h5 class="card-title">${card.nome}</h5>
           <div class="card-text flex-grow-1">
-            <p><b>Código:</b> ${turma.codigo}</p>
-            ${turma.apelido ? `<p><b>Apelido:</b> ${turma.apelido}</p>` : ''}
+            <p><b>ID:</b> ${card.id}</p>
           </div>
           <div class="d-flex gap-4 mt-auto">
+            <button class="btn btn-primary btn-open align-self-start">Abrir</button>
             <button class="btn btn-danger btn-trash align-self-start" title="Excluir">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 23 24">
                 <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
@@ -118,16 +118,22 @@
         </div>
       `;
 
+      // Botão abrir redireciona para /disciplinas
+      cardEl.querySelector('.btn-open').onclick = (e) => {
+        e.stopPropagation();
+        window.location.href = '/disciplinas';
+      };
+
       // Botão excluir: usa token no header
       cardEl.querySelector('.btn-trash').onclick = async (e) => {
         e.stopPropagation();
-        if (confirm('Deseja excluir esta turma?')) {
+        if (confirm('Deseja excluir este curso?')) {
           const token = localStorage.getItem('token');
-          await fetch(`/api/turmas/${turma.id}`, { 
+          await fetch(`/api/cursos/${card.id}`, { 
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          loadTurmas();
+          loadCursos();
         }
       };
 
@@ -136,7 +142,7 @@
       return col;
     }
 
-    // Card "adicionar turma"
+    // Card "adicionar curso"
     function renderAddCard() {
       const colAdd = document.createElement('div');
       colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
@@ -149,64 +155,61 @@
       cardAdd.innerHTML = `
         <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
           <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
-          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Turma</h5>
-          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova turma.</p>
+          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Curso</h5>
+          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar um novo curso.</p>
         </div>
       `;
 
       cardAdd.onclick = async () => {
-        const nome = prompt('Digite o nome da nova turma:');
+        const nome = prompt('Digite o nome do novo curso:');
         if (!nome) return;
-        const codigo = prompt('Digite o código da turma:');
-        if (!codigo) return;
-        const apelido = prompt('Digite o apelido (opcional):') || '';
         const token = localStorage.getItem('token');
-        await fetch('/api/turmas', {
+        await fetch('/api/cursos', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ nome, codigo, apelido })
+          body: JSON.stringify({ nome })
         });
-        loadTurmas();
+        loadCursos();
       };
 
       colAdd.appendChild(cardAdd);
       cardsContainer.appendChild(colAdd);
     }
 
-    // Carregar as turmas do backend usando token
-    async function loadTurmas() {
+    // Carregar os cursos do backend usando token
+    async function loadCursos() {
       cardsContainer.innerHTML = '';
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('/api/turmas', {
+        const res = await fetch('/api/cursos', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error('Erro ao buscar turmas');
-        const turmas = await res.json();
+        if (!res.ok) throw new Error('Erro ao buscar cursos');
+        const cursos = await res.json();
 
-        if (turmas.length === 0) {
+        if (cursos.length === 0) {
           const emptyMessage = document.createElement('div');
           emptyMessage.className = 'col-12 text-center my-5';
-          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhuma turma cadastrada</h4>`;
+          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhum curso cadastrado</h4>`;
           cardsContainer.appendChild(emptyMessage);
         } else {
-          turmas.forEach(renderCard);
+          cursos.forEach(renderCard);
         }
         renderAddCard();
       } catch (error) {
         const errorMessage = document.createElement('div');
         errorMessage.className = 'col-12 text-center my-5 text-danger';
-        errorMessage.innerHTML = `<h4>Erro ao carregar turmas</h4>`;
+        errorMessage.innerHTML = `<h4>Erro ao carregar cursos</h4>`;
         cardsContainer.appendChild(errorMessage);
         console.error(error);
       }
     }
 
     // Inicializa a lista
-    loadTurmas();
+    loadCursos();
   </script>
 
 </body>
