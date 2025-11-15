@@ -153,14 +153,14 @@ export class NotaService {
       SELECT
           a.identificador AS aluno_identificador,
           a.nome AS aluno_nome,
-          cn.identificador AS componente_identificador,
+          cn.sigla AS componente_identificador,
           n.valor
       FROM nota AS n
       JOIN aluno_turma AS at ON n.aluno_turma_id = at.id
       JOIN aluno AS a ON at.aluno_id = a.id
       JOIN componente_nota AS cn ON n.componente_id = cn.id
       WHERE at.turma_id = ?
-      ORDER BY a.nome, cn.identificador;
+      ORDER BY a.nome, cn.sigla;
     `;
 
     try {
