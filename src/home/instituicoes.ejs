@@ -6,37 +6,26 @@
   <title>Instituições</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="/public/instiuicoescss.css" rel="stylesheet">
-
-  <style>
-    #institutionDetails {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-
-    #institutionDetails.active {
-      display: block;
-    }
-
-    .back-button {
-      margin-bottom: 20px;
-    }
-  </style>
 </head>
+
 <body>
   <!-- Navbar topo fixa style V3 -->
   <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
     <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
-      <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold" style="color:#4d4d4d; letter-spacing:0.5px;">
-        Dashboard
-      </a>
+
+      <div>
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px;">
+          Instituições
+        </a>
+      </div>
+
       <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">
         NotaDez
       </span>
+
     </div>
   </nav>
+
 
 
   <main class="dashboard-main pt-5">
@@ -128,6 +117,28 @@
       loadUserName();
     });
 
+    async function loadInstituicoes() {
+      wrapper.innerHTML = '';
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/instituicoes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error();
+        const instituicoes = await res.json();
+        
+        // Renderiza as instituições primeiro
+        instituicoes.forEach((inst) => renderInstitutionCard(inst));
+        
+        // Depois renderiza o card de adicionar por último
+        renderAddCard();
+      } catch {
+        wrapper.innerHTML = `<div class="text-danger my-5">Erro ao carregar instituições</div>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadInstituicoes);
+
     const wrapper = document.getElementById('instituicoesWrapper');
     const detailsContainer = document.getElementById('institutionDetails');
     const institutionsSection = document.getElementById('institutionsSection');
@@ -138,15 +149,33 @@
       detailsContainer.innerHTML = '';
     }
 
-    function renderInstitutionCard(inst) {
+    async function renderInstitutionCard(inst) {
       const card = document.createElement('div');
       card.className = 'card-dashboard';
+      
+      // Busca as estatísticas
+      let disciplinas = 0;
+      let turmas = 0;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/instituicoes/${inst.id}/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const stats = await res.json();
+          disciplinas = stats.disciplinas;
+          turmas = stats.turmas;
+        }
+      } catch (err) {
+        console.error('Erro ao buscar stats:', err);
+      }
+      
       card.innerHTML = `
         <div class="title">${inst.nome}</div>
         <div class="desc">${inst.cnpj ? inst.cnpj : ''}</div>
         <div class="badges">
-          <span class="badge-custom">${inst.disciplinas || 0} disciplina(s)</span>
-          <span class="badge-custom">${inst.turmas || 0} turma(s)</span>
+          <span class="badge-custom">${disciplinas} disciplina(s)</span>
+          <span class="badge-custom">${turmas} turma(s)</span>
         </div>
         <div class="actions">
           <button class="btn btn-slim btn-abrir">Abrir</button>
@@ -157,10 +186,10 @@
 
       card.querySelector('.btn-abrir').onclick = () => {
         const token = localStorage.getItem('token');
-        const id = inst.id; // ou outro identificador da instituição
-        window.location.href = `/cursos/${id}?token=${token}`;
+        const id = inst.id;
+        window.location.href = `/cursos/${id}?token=${token}&instituicao_id=${id}&instituicao_nome=${encodeURIComponent(inst.nome)}`;
       };
-                                                                                                                                                                               
+                                                                                                                                                                              
       card.querySelector('.btn-editar').onclick = () => abrirModalEditarInstituicao(inst);
       card.querySelector('.btn-deletar').onclick = async () => {
         if (confirm(`Deseja excluir a instituição ${inst.nome}?`)) {
@@ -216,22 +245,7 @@
         alert('Erro ao cadastrar instituição. Tente novamente.');
       }
     });
-    
-    async function loadInstituicoes() {
-      wrapper.innerHTML = '';
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/instituicoes', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error();
-        const instituicoes = await res.json();
-        instituicoes.forEach((inst) => renderInstitutionCard(inst));
-        renderAddCard();
-      } catch {
-        wrapper.innerHTML = `<div class="text-danger my-5">Erro ao carregar instituições</div>`;
-      }
-    }
+
     document.addEventListener('DOMContentLoaded', loadInstituicoes);
 
     function abrirModalEditarInstituicao(instituicao) {

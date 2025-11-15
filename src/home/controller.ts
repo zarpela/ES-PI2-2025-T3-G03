@@ -9,13 +9,10 @@ import type { RowDataPacket } from 'mysql2';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const JWT_SECRET = "segredo_super_secreto";
 
-const JWT_SECRET = "segredo_super_secreto"; // coloque em variável de ambiente (.env);
-
-// Tipagem do req.user para TypeScript
 declare global {
   namespace Express {
     interface Request {
@@ -53,16 +50,37 @@ router.get('/cursos', (req, res) => {
 // DISCIPLINAS COM USUÁRIO
 router.get('/api/disciplinas', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const userId = req.user?.id;
+    const cursoIdQuery = req.query.curso_id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+    
+    let query = `
       SELECT d.*, c.nome AS curso_nome
       FROM disciplina d
       LEFT JOIN curso c ON d.curso_id = c.id
       WHERE d.usuario_id = ?
-    `, [req.user?.id]);
-
+    `;
+    
+    const params: any[] = [userId];
+    
+    if (cursoIdQuery) {
+      const cursoId = Number(cursoIdQuery);
+      
+      if (!isNaN(cursoId)) {
+        query += ` AND d.curso_id = ?`;
+        params.push(cursoId);
+      }
+    }
+    
+    const [rows] = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: "Erro ao buscar disciplinas" });
+    console.error('Erro ao buscar disciplinas:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+    res.status(500).json({ error: 'Erro ao buscar disciplinas', details: errorMessage });
   }
 });
 
@@ -80,16 +98,47 @@ router.post('/api/disciplinas', authenticateToken, async (req, res) => {
 router.put('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
-    if (isNaN(id)) throw new Error('ID inválido');
-    const [rows] = await pool.query('SELECT usuario_id FROM disciplina WHERE id = ?', [id]);
+    const userId = req.user?.id;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+    
+    const [rows] = await pool.query(
+      'SELECT usuario_id FROM disciplina WHERE id = ?',
+      [id]
+    );
+    
     const disciplina = (rows as any[])[0];
-    if (!disciplina) return res.status(404).json({ error: 'Disciplina não encontrada' });
-    if (disciplina.usuario_id !== req.user?.id) return res.status(403).json({ error: 'Sem permissão para editar esta disciplina.' });
+    
+    if (!disciplina) {
+      return res.status(404).json({ error: 'Disciplina não encontrada' });
+    }
+    
+    if (disciplina.usuario_id !== userId) {
+      return res.status(403).json({ error: 'Sem permissão para editar esta disciplina.' });
+    }
+    
     const data = req.body;
-    await updateDisciplina(id, data);
-    res.json({ id });
+    
+    const [result] = await pool.query(
+      'UPDATE disciplina SET nome = ?, sigla = ?, codigo = ?, periodo = ? WHERE id = ?',
+      [data.nome, data.sigla, data.codigo || null, data.periodo || null, id]
+    );
+    
+    if ((result as any).affectedRows === 0) {
+      return res.status(400).json({ error: 'Nenhuma linha foi atualizada' });
+    }
+    
+    res.json({ id, success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao editar disciplina.' });
+    console.error('Erro ao editar disciplina:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+    res.status(500).json({ error: 'Erro ao editar disciplina', details: errorMessage });
   }
 });
 
@@ -107,7 +156,7 @@ router.delete('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// INSTITUICOES (dados globais - sem autenticação obrigatória para leitura)
+// INSTITUICOES
 router.get('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -119,14 +168,11 @@ router.get('/api/instituicoes', authenticateToken, async (req, res) => {
   }
 });
 
-
-// Rota para mostrar página da instituição específica
 router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
   const instituicaoId = req.params.id;
   const userId = req.user?.id;
 
   try {
-    // Busca instituição do usuário
     const [instituicaoRows] = await pool.query(
       'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?', 
       [instituicaoId, userId]
@@ -134,7 +180,6 @@ router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
     const instituicao = (instituicaoRows as any[])[0];
     if (!instituicao) return res.status(404).send('Instituição não encontrada');
 
-    // Busca cursos da instituição que pertencem ao usuário
     const [cursoRows] = await pool.query(`
       SELECT c.* FROM curso c
       JOIN instituicao i ON i.id = c.instituicao_id
@@ -146,7 +191,6 @@ router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
     res.status(500).send('Erro ao buscar instituição ou cursos');
   }
 });
-
 
 router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
@@ -160,13 +204,57 @@ router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   }
 });
 
-// Rota API para buscar instituição específica com cursos
+// ✅ ROTA ESPECÍFICA ANTES DA GENÉRICA
+router.get('/api/instituicoes/:id/stats', authenticateToken, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const [instRows] = await pool.query(
+      'SELECT id FROM instituicao WHERE id = ? AND usuario_id = ?',
+      [id, userId]
+    );
+
+    if ((instRows as any[]).length === 0) {
+      return res.status(404).json({ error: 'Instituição não encontrada' });
+    }
+
+    // Conta disciplinas
+    const [discRows] = await pool.query(`
+      SELECT COUNT(*) as total FROM disciplina d
+      JOIN curso c ON d.curso_id = c.id
+      WHERE c.instituicao_id = ? AND d.usuario_id = ?
+    `, [id, userId]);
+
+    // Conta turmas com LEFT JOIN ← MUDANÇA
+    const [turmaRows] = await pool.query(`
+      SELECT COUNT(DISTINCT t.id) as total FROM turma t
+      LEFT JOIN disciplina d ON t.disciplina_id = d.id
+      LEFT JOIN curso c ON d.curso_id = c.id
+      WHERE c.instituicao_id = ? AND d.usuario_id = ?
+    `, [id, userId]);
+
+    const disciplinasCount = (discRows as any[])[0]?.total || 0;
+    const turmasCount = (turmaRows as any[])[0]?.total || 0;
+
+    res.json({ disciplinas: disciplinasCount, turmas: turmasCount });
+  } catch (err) {
+    console.error('Erro ao contar stats:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+    res.status(500).json({ error: 'Erro ao contar estatísticas', details: errorMessage });
+  }
+});
+
+// ✅ ROTA GENÉRICA DEPOIS DA ESPECÍFICA
 router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user?.id;
 
   try {
-    // Busca instituição do usuário
     const [instituicaoRows] = await pool.query(
       'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?',
       [id, userId]
@@ -178,7 +266,6 @@ router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
 
     const instituicao = (instituicaoRows as any[])[0];
 
-    // Busca cursos da instituição
     const [cursoRows] = await pool.query(`
       SELECT c.* FROM curso c
       JOIN instituicao i ON i.id = c.instituicao_id
@@ -191,7 +278,6 @@ router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Erro ao buscar instituição ou cursos' });
   }
 });
-
 
 router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
@@ -214,16 +300,10 @@ router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// CURSOS - vinculados com instituição
-
+// CURSOS
 router.get('/cursos/:id', async (req, res) => {
   const instituicaoId = req.params.id;
   const token = req.query.token as string;
-
-  console.log('=== INICIANDO ROTA /cursos/:id ===');
-  console.log('instituicaoId:', instituicaoId);
-  console.log('token recebido:', token ? 'SIM' : 'NÃO');
-
   if (!token) {
     console.log('Erro: Token não fornecido');
     return res.status(401).send('Token não fornecido. Acesso negado.');
@@ -238,7 +318,6 @@ router.get('/cursos/:id', async (req, res) => {
   }
 
   try {
-    console.log('Buscando instituição:', instituicaoId, 'usuario_id:', userId);
     const [institutionRows] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?',
       [instituicaoId, userId]
@@ -263,31 +342,65 @@ router.get('/cursos/:id', async (req, res) => {
   }
 });
 
-
-router.get('/api/cursos', async (req, res) => {
+router.get('/api/cursos', authenticateToken, async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const userId = req.user?.id;
+    const instituicaoIdQuery = req.query.instituicao_id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+    
+    let query = `
       SELECT c.*, i.nome AS instituicao_nome
       FROM curso c
       LEFT JOIN instituicao i ON c.instituicao_id = i.id
-    `);
+      WHERE c.usuario_id = ?
+    `;
+    
+    const params: any[] = [userId];
+    
+    if (instituicaoIdQuery) {
+      const instituicaoId = Number(instituicaoIdQuery);
+      
+      if (!isNaN(instituicaoId)) {
+        query += ` AND c.instituicao_id = ?`;
+        params.push(instituicaoId);
+      }
+    }
+    
+    const [rows] = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar cursos' });
+    const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+    res.status(500).json({ error: 'Erro ao buscar cursos', details: errorMessage });
   }
 });
 
 router.post('/api/cursos', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+    
     const [result] = await pool.query(
-      'INSERT INTO curso (nome, instituicao_id) VALUES (?, ?)', 
-      [data.nome, data.instituicao_id || null]
+      'INSERT INTO curso (nome, instituicao_id, usuario_id) VALUES (?, ?, ?)', 
+      [data.nome, data.instituicao_id || null, userId]
     );
     const insertId = (result as any).insertId;
-    res.status(201).json({ id: insertId, nome: data.nome, instituicao_id: data.instituicao_id || null });
+    res.status(201).json({ 
+      id: insertId, 
+      nome: data.nome, 
+      instituicao_id: data.instituicao_id || null,
+      usuario_id: userId 
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao adicionar curso' });
+    console.error('Erro ao adicionar curso:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+    res.status(500).json({ error: 'Erro ao adicionar curso', details: errorMessage });
   }
 });
 
@@ -315,7 +428,7 @@ router.delete('/api/cursos/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// TURMAS via join com disciplina para usuário
+// TURMAS
 router.get('/api/turmas', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -382,7 +495,6 @@ router.delete('/api/turmas/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Rota para obter turmas por disciplina
 router.get('/api/turmas/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const disciplinaId = Number(req.params.id);

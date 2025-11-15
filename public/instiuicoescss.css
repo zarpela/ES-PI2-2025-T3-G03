@@ -125,9 +125,9 @@ body {
 }
 
 .btn-abrir { background: #2563EB; color:#fff;}
-.btn-abrir:hover { background: #1d4ed8; }
-.btn-editar { background: #e1e7cd; color: #324713; }
-.btn-editar:hover { background: #d2dfac; color: #181f13; }
+.btn-abrir:hover { background: #1b51c7; color:#fff;}
+.btn-editar { background: #dfdfdf; color: #324713; }
+.btn-editar:hover { background: #cfcfcf; color: #181f13; }
 .btn-deletar { background: #fff0ea; color: #c34b37; }
 .btn-deletar:hover { background: #ffe2d5; }
 
@@ -141,6 +141,7 @@ body {
   padding: 22px 0 22px 0;
   color: #656665;
   transition: background 0.2s;
+  order: 999; /* Deixa o Card adicionar como o ultimo card */
 }
 .card-add-dashboard:hover {background: #f0f0f0bb;}
 .card-add-dashboard .plus {font-size: 2.1rem;font-weight: 700;}
