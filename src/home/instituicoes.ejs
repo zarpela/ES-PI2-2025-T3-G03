@@ -41,7 +41,6 @@
       cardEl.setAttribute('role', 'button');
       cardEl.setAttribute('aria-pressed', 'false');
 
-      // Adapte: Exibe nome e CNPJ ou o que houver no card
       cardEl.innerHTML = `
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${card.nome}</h5>
@@ -60,18 +59,23 @@
         </div>
       `;
 
-      // Botão excluir: pode usar fetch DELETE
-      cardEl.querySelector('.btn-trash').onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm('Deseja excluir esta instituição?')) {
-          await fetch(`/api/instituicoes/${card.id}`, { method: 'DELETE' });
-          loadInstituicoes();
-        }
-      };
-
+      // Botão abrir
       cardEl.querySelector('.btn-primary').onclick = (e) => {
         e.stopPropagation();
         alert("Abrir: " + card.nome);
+      };
+
+      // Botão excluir: usa token no header
+      cardEl.querySelector('.btn-trash').onclick = async (e) => {
+        e.stopPropagation();
+        if (confirm('Deseja excluir esta instituição?')) {
+          const token = localStorage.getItem('token');
+          await fetch(`/api/instituicoes/${card.id}`, { 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          loadInstituicoes();
+        }
       };
 
       col.appendChild(cardEl);
@@ -79,7 +83,7 @@
       return col;
     }
 
-    // Card "adicionar instituição" (igual ao seu)
+    // Card "adicionar instituição"
     function renderAddCard() {
       const colAdd = document.createElement('div');
       colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
@@ -100,11 +104,14 @@
       cardAdd.onclick = async () => {
         const nome = prompt('Digite o nome da nova instituição:');
         if (!nome) return;
-        // Se quiser pedir CNPJ
         const cnpj = prompt('Digite o CNPJ da nova instituição:') || '';
+        const token = localStorage.getItem('token');
         await fetch('/api/instituicoes', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ nome, cnpj })
         });
         loadInstituicoes();
@@ -114,11 +121,14 @@
       cardsContainer.appendChild(colAdd);
     }
 
-    // Carregar do backend!
+    // Carregar as instituições do backend usando token
     async function loadInstituicoes() {
       cardsContainer.innerHTML = '';
       try {
-        const res = await fetch('/api/instituicoes');
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/instituicoes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (!res.ok) throw new Error('Erro ao buscar instituições');
         const instituicoes = await res.json();
 
@@ -140,8 +150,9 @@
       }
     }
 
-    // Inicialização
+    // Inicializa a lista
     loadInstituicoes();
   </script>
+
 </body>
 </html>
