@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Turmas</title>
+  <title>Disciplinas</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/public/homecss.css" rel="stylesheet">
 </head>
@@ -11,59 +11,23 @@
   <aside id="sidebar" aria-label="Barra lateral principal">
     <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
     <nav>
-      <a href="/instituicoes" class="nav-link" tabindex="0">
-        <span class="text">Instituições</span>
-      </a>
-      <a href="/disciplinas" class="nav-link" tabindex="0">
-        <span class="text">Disciplinas</span>
-      </a>
-      <a href="/turmas" class="nav-link active" tabindex="0">
-        <span class="text">Turmas</span>
-      </a>
-      <a href="#" class="nav-link" tabindex="0">
-        <span class="text">Gerenciar Turmas</span>
-      </a>
+      <a href="/instituicoes" class="nav-link" tabindex="0"><span class="text">Instituições</span></a>
+      <a href="/disciplinas" class="nav-link active" tabindex="0"><span class="text">Disciplinas</span></a>
+      <a href="/turmas" class="nav-link" tabindex="0"><span class="text">Turmas</span></a>
+      <a href="#" class="nav-link" tabindex="0"><span class="text">Gerenciar Turmas</span></a>
     </nav>
   </aside>
-
-  <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">
-    ←
-  </button>
-
+  <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">←</button>
   <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
-    <h2 class="instituicao-titulo mb-4">Turmas</h2>
+    <h2 class="instituicao-titulo mb-4">Disciplinas</h2>
     <div class="container-fluid cards row g-4" id="cardsContainer"></div>
   </main>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const contentArea = document.getElementById('content-area');
-    const sideLinks = document.querySelectorAll('#sidebar .nav-link');
     const cardsContainer = document.getElementById('cardsContainer');
 
-    sideLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        sideLinks.forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    toggleSidebarBtn.addEventListener('click', () => {
-      const collapsed = sidebar.classList.toggle('collapsed');
-      if (collapsed) {
-        toggleSidebarBtn.classList.add('collapsed');
-        toggleSidebarBtn.innerHTML = '▶ Mostrar';
-        contentArea.classList.add('expanded');
-      } else {
-        toggleSidebarBtn.classList.remove('collapsed');
-        toggleSidebarBtn.innerHTML = '←';
-        contentArea.classList.remove('expanded');
-      }
-    });
-
-    function renderCard(turma) {
+    // Função para renderizar cada card de disciplina
+    function renderCard(disciplina) {
       const col = document.createElement('div');
       col.className = 'col-sm-6 col-md-4 col-lg-3';
 
@@ -75,14 +39,17 @@
 
       cardEl.innerHTML = `
         <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${turma.nome}</h5>
+          <h5 class="card-title">${disciplina.nome}</h5>
           <div class="card-text flex-grow-1">
-            <p><b>Código:</b> ${turma.codigo}</p>
-            <p><b>Apelido:</b> ${turma.apelido || '-'}</p>
+            <p><b>ID:</b> ${disciplina.id}</p>
+            ${disciplina.curso_nome ? `<p><b>Curso:</b> ${disciplina.curso_nome}</p>` : ''}
+            ${disciplina.sigla ? `<p><b>Sigla:</b> ${disciplina.sigla}</p>` : ''}
+            ${disciplina.codigo ? `<p><b>Código:</b> ${disciplina.codigo}</p>` : ''}
+            ${disciplina.periodo ? `<p><b>Período:</b> ${disciplina.periodo}</p>` : ''}
           </div>
           <div class="d-flex gap-4 mt-auto">
             <button class="btn btn-primary btn-open align-self-start">Abrir</button>
-            <button class="btn btn-danger btn-trash align-self-start" title="Excluir turma">
+            <button class="btn btn-danger btn-trash align-self-start" title="Excluir">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 23 24">
                 <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
               </svg>
@@ -93,18 +60,18 @@
 
       cardEl.querySelector('.btn-open').onclick = (e) => {
         e.stopPropagation();
-        alert("Abrir: " + turma.nome);
+        alert("Abrir: " + disciplina.nome);
       };
 
       cardEl.querySelector('.btn-trash').onclick = async (e) => {
         e.stopPropagation();
-        if (confirm('Deseja excluir esta turma?')) {
+        if (confirm('Deseja excluir esta disciplina?')) {
           const token = localStorage.getItem('token');
-          await fetch(`/api/turmas/${turma.id}`, {
+          await fetch(`/api/disciplinas/${disciplina.id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          loadTurmas();
+          loadDisciplinas();
         }
       };
 
@@ -113,6 +80,7 @@
       return col;
     }
 
+    // Card "adicionar disciplina"
     function renderAddCard() {
       const colAdd = document.createElement('div');
       colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
@@ -125,63 +93,64 @@
       cardAdd.innerHTML = `
         <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
           <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
-          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Turma</h5>
-          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova turma.</p>
+          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Disciplina</h5>
+          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova disciplina.</p>
         </div>
       `;
 
       cardAdd.onclick = async () => {
-        const nome = prompt('Digite o nome da nova turma:');
+        const nome = prompt('Digite o nome da disciplina:');
         if (!nome) return;
-        const codigo = prompt('Digite o código da turma:');
-        if (!codigo) return;
-        const apelido = prompt('Digite o apelido (opcional):') || '';
-
+        const sigla = prompt('Digite a sigla:') || '';
+        const codigo = prompt('Digite o código da disciplina:') || '';
+        const periodo = prompt('Digite o período:') || '';
         const token = localStorage.getItem('token');
-        await fetch('/api/turmas', {
+        await fetch('/api/disciplinas', {
           method: 'POST',
-          headers: {
+          headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ nome, codigo, apelido })
+          body: JSON.stringify({ nome, sigla, codigo, periodo })
         });
-        loadTurmas();
+        loadDisciplinas();
       };
 
       colAdd.appendChild(cardAdd);
       cardsContainer.appendChild(colAdd);
     }
 
-    async function loadTurmas() {
+    // Carregar disciplinas do backend com o token
+    async function loadDisciplinas() {
       cardsContainer.innerHTML = '';
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('/api/turmas', {
+        const res = await fetch('/api/disciplinas', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error('Erro ao buscar turmas');
-        const turmas = await res.json();
+        if (!res.ok) throw new Error('Erro ao buscar disciplinas');
+        const disciplinas = await res.json();
 
-        if (turmas.length === 0) {
+        if (disciplinas.length === 0) {
           const emptyMessage = document.createElement('div');
           emptyMessage.className = 'col-12 text-center my-5';
-          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhuma turma cadastrada</h4>`;
+          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhuma disciplina cadastrada</h4>`;
           cardsContainer.appendChild(emptyMessage);
         } else {
-          turmas.forEach(renderCard);
+          disciplinas.forEach(renderCard);
         }
         renderAddCard();
       } catch (error) {
         const errorMessage = document.createElement('div');
         errorMessage.className = 'col-12 text-center my-5 text-danger';
-        errorMessage.innerHTML = `<h4>Erro ao carregar turmas</h4>`;
+        errorMessage.innerHTML = `<h4>Erro ao carregar disciplinas</h4>`;
         cardsContainer.appendChild(errorMessage);
         console.error(error);
       }
     }
 
-    loadTurmas();
+    // Inicialização
+    loadDisciplinas();
   </script>
 </body>
 </html>
