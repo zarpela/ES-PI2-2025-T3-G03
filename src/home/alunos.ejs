@@ -172,6 +172,7 @@
     let cursoId = null;
     let instituicaoId = null;
     let componentes = [];
+    let formulaNotaFinal = null;
 
     function showInfo(msg) {
       infoModalBody.textContent = msg;
@@ -206,7 +207,7 @@
     }
 
     // MONTA CABEÇALHO
-    function buildTableHeader() {
+    function buildTableHeader(mostrarNotaFinal = false) {
       tableHead.innerHTML = '';
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -218,6 +219,12 @@
         th.textContent = c.sigla;
         tr.appendChild(th);
       });
+      if (mostrarNotaFinal) {
+        const th = document.createElement('th');
+        th.textContent = 'Nota Final';
+        th.style.fontWeight = 'bold';
+        tr.appendChild(th);
+      }
       tableHead.appendChild(tr);
     }
 
@@ -233,6 +240,58 @@
         componentes = await res.json();
       } catch (err) {
         console.error('Erro ao carregar componentes', err);
+      }
+    }
+
+    async function loadFormulaNotaFinal() {
+      if (!disciplinaId) return;
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/formula-nota-final/${disciplinaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          formulaNotaFinal = await res.json();
+        }
+      } catch (err) {
+        console.error('Erro ao carregar fórmula:', err);
+      }
+    }
+
+    function calcularNotaFinal(notasAluno) {
+      if (!formulaNotaFinal || !formulaNotaFinal.expressao) {
+        return null;
+      }
+
+      try {
+        // Substituir as siglas dos componentes pelos valores das notas
+        let expressao = formulaNotaFinal.expressao;
+        
+        // Verificar se todas as notas estão presentes
+        for (const c of componentes) {
+          const valor = notasAluno[c.sigla];
+          if (valor === null || valor === undefined || valor === '') {
+            return null; // Se alguma nota estiver faltando, não calcula
+          }
+        }
+
+        // Substituir as siglas pelos valores
+        componentes.forEach(c => {
+          const valor = notasAluno[c.sigla];
+          // Substituir a sigla pelo valor (case insensitive, word boundary)
+          const regex = new RegExp(`\\b${c.sigla}\\b`, 'gi');
+          expressao = expressao.replace(regex, valor);
+        });
+
+        // Avaliar a expressão matemática de forma segura
+        // Usar Function para evitar eval direto
+        const resultado = Function('"use strict"; return (' + expressao + ')')();
+        
+        // Arredondar para 2 casas decimais
+        return Math.round(resultado * 100) / 100;
+      } catch (err) {
+        console.error('Erro ao calcular nota final:', err, 'Expressão:', formulaNotaFinal.expressao);
+        return null;
       }
     }
 
@@ -255,7 +314,8 @@
 
         if (alunos.length === 0) {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td colspan="${2 + componentes.length}" class="text-center text-muted">Nenhum aluno cadastrado</td>`;
+          const colspan = 2 + componentes.length + (formulaNotaFinal && formulaNotaFinal.expressao ? 1 : 0);
+          tr.innerHTML = `<td colspan="${colspan}" class="text-center text-muted">Nenhum aluno cadastrado</td>`;
           tableBody.appendChild(tr);
           return;
         }
@@ -280,6 +340,13 @@
         alunos.forEach(al => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${al.identificador}</td><td>${al.nome}</td>`;
+
+          // Obter notas do aluno para cálculo
+          const notasAluno = {};
+          componentes.forEach(c => {
+            const notaKey = `${al.id}_${c.sigla}`;
+            notasAluno[c.sigla] = notasExistentes[notaKey] || null;
+          });
 
           componentes.forEach(c => {
             const td = document.createElement('td');
@@ -363,6 +430,25 @@
                 if (!res.ok) {
                   throw new Error(data.error || 'Erro ao salvar nota');
                 }
+                
+                // Atualizar nota final se houver fórmula
+                if (formulaNotaFinal && formulaNotaFinal.expressao) {
+                  const tr = inputEl.closest('tr');
+                  const notaFinalTd = tr.querySelector('td:last-child');
+                  if (notaFinalTd) {
+                    // Recalcular notas do aluno
+                    const notasAluno = {};
+                    componentes.forEach(c => {
+                      const notaInput = tr.querySelector(`.nota-${c.sigla}`);
+                      notasAluno[c.sigla] = notaInput ? parseFloat(notaInput.value) || null : null;
+                    });
+                    const notaFinal = calcularNotaFinal(notasAluno);
+                    const inputNotaFinal = notaFinalTd.querySelector('input');
+                    if (inputNotaFinal) {
+                      inputNotaFinal.value = notaFinal !== null ? notaFinal.toFixed(2) : '—';
+                    }
+                  }
+                }
               } catch (err) {
                 console.error('Erro ao salvar nota:', err);
                 showInfo('Erro ao salvar nota: ' + (err.message || err));
@@ -372,6 +458,21 @@
             td.appendChild(input);
             tr.appendChild(td);
           });
+
+          // Adicionar coluna de Nota Final se houver fórmula
+          if (formulaNotaFinal && formulaNotaFinal.expressao) {
+            const td = document.createElement('td');
+            const notaFinal = calcularNotaFinal(notasAluno);
+            const inputNotaFinal = document.createElement('input');
+            inputNotaFinal.type = 'text';
+            inputNotaFinal.className = 'form-control form-control-sm';
+            inputNotaFinal.value = notaFinal !== null ? notaFinal.toFixed(2) : '—';
+            inputNotaFinal.readOnly = true;
+            inputNotaFinal.style.backgroundColor = '#f8f9fa';
+            inputNotaFinal.style.fontWeight = 'bold';
+            td.appendChild(inputNotaFinal);
+            tr.appendChild(td);
+          }
 
           tableBody.appendChild(tr);
         });
@@ -566,6 +667,12 @@
       }
 
       const token = localStorage.getItem('token');
+      
+      // Garantir que a fórmula esteja carregada
+      if (!formulaNotaFinal && disciplinaId) {
+        await loadFormulaNotaFinal();
+      }
+      
       try {
         const res = await fetch(`/api/notas/turma/${turmaId}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -625,12 +732,25 @@
 
         // Gerar CSV
         const headers = ['Matrícula', 'Nome', ...componentes.map(c => c.sigla)];
+        
+        // Adicionar coluna de Nota Final se houver fórmula
+        if (formulaNotaFinal && formulaNotaFinal.expressao) {
+          headers.push('Nota Final');
+        }
+        
         const rows = alunos.map(aluno => {
           const linha = [
             aluno.identificador,
             aluno.nome,
             ...componentes.map(c => aluno.notas[c.sigla] || '')
           ];
+          
+          // Adicionar nota final se houver fórmula
+          if (formulaNotaFinal && formulaNotaFinal.expressao) {
+            const notaFinal = calcularNotaFinal(aluno.notas);
+            linha.push(notaFinal !== null ? notaFinal.toFixed(2) : '—');
+          }
+          
           return linha.map(campo => {
             // Escapar campos que contêm vírgula ou aspas
             if (typeof campo === 'string' && (campo.includes(',') || campo.includes('"') || campo.includes('\n'))) {
@@ -694,7 +814,8 @@
 
     async function init() {
       await loadComponentes();
-      buildTableHeader();
+      await loadFormulaNotaFinal();
+      buildTableHeader(formulaNotaFinal && formulaNotaFinal.expressao);
       await loadAlunos();
       carregarSelectDeComponentes(componentes);
 

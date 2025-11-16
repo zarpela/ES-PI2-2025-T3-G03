@@ -49,6 +49,22 @@
   <main class="dashboard-main pt-5">
     <div class="dashboard-title" id="mainTitle">Carregando...</div>
     <div class="dashboard-desc">Gerencie as turmas da disciplina</div>
+    
+    <!-- Campo para Fórmula de Nota Final -->
+    <div class="card p-3 mt-3 mx-3 mb-3" id="formulaCard" style="display: none;">
+      <h6 class="mb-3">Fórmula de Nota Final</h6>
+      <div class="mb-2">
+        <label class="form-label">Expressão matemática (ex: (P1 + P2 + P3) / 3)</label>
+        <input type="text" class="form-control" id="formulaInput" placeholder="Ex: (P1 + P2 + P3) / 3">
+        <small class="form-text text-muted">Use as siglas dos componentes cadastrados. Todos os componentes devem estar na fórmula.</small>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm" id="btnSalvarFormula">Salvar Fórmula</button>
+        <button class="btn btn-secondary btn-sm" id="btnCancelarFormula" style="display: none;">Cancelar</button>
+      </div>
+      <div id="formulaStatus" class="mt-2"></div>
+    </div>
+    
     <div class="instituicoes-header">Suas Turmas</div>
     <div class="instituicoes-wrapper" id="cardsContainer"></div>
   </main>
@@ -225,6 +241,82 @@
 
 
 
+    async function loadFormula() {
+      if (!disciplinaId) return;
+      
+      const token = localStorage.getItem("token");
+      try {
+        // Verificar se há componentes cadastrados
+        const componentesRes = await fetch(`/api/componentes?disciplina_id=${disciplinaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!componentesRes.ok) return;
+        const componentes = await componentesRes.json();
+        
+        if (componentes.length === 0) {
+          document.getElementById('formulaCard').style.display = 'none';
+          return;
+        }
+        
+        // Mostrar o card de fórmula
+        document.getElementById('formulaCard').style.display = 'block';
+        
+        // Carregar fórmula existente
+        const formulaRes = await fetch(`/api/formula-nota-final/${disciplinaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (formulaRes.ok) {
+          const formula = await formulaRes.json();
+          if (formula && formula.expressao) {
+            document.getElementById('formulaInput').value = formula.expressao;
+            document.getElementById('formulaStatus').innerHTML = 
+              `<span class="text-success">Fórmula salva: ${formula.expressao}</span>`;
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar fórmula:', err);
+      }
+    }
+
+    async function salvarFormula() {
+      if (!disciplinaId) return;
+      
+      const expressao = document.getElementById('formulaInput').value.trim();
+      if (!expressao) {
+        alert('Por favor, informe a fórmula');
+        return;
+      }
+      
+      const token = localStorage.getItem("token");
+      try {
+        const res = await fetch('/api/formula-nota-final', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            disciplina_id: disciplinaId,
+            expressao: expressao
+          })
+        });
+        
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Erro ao salvar fórmula');
+          return;
+        }
+        
+        document.getElementById('formulaStatus').innerHTML = 
+          `<span class="text-success">Fórmula salva com sucesso!</span>`;
+      } catch (err) {
+        console.error('Erro ao salvar fórmula:', err);
+        alert('Erro ao salvar fórmula');
+      }
+    }
+
     async function loadTurmas() {
       cardsContainer.innerHTML = "";
 
@@ -392,9 +484,13 @@
       }
     });
 
+    // Event listener para salvar fórmula
+    document.getElementById('btnSalvarFormula').addEventListener('click', salvarFormula);
+
     window.addEventListener("DOMContentLoaded", async () => {
       await atualizarBreadcrumbs();
       captureParams();
+      await loadFormula();
       loadTurmas();
     });
 
