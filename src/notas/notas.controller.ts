@@ -1,4 +1,4 @@
-//Desenvolvido por Marcelo
+//Desenvolvido por Marcelo Zarpelon
 import { type Request, type Response } from 'express';
 import { NotaService } from '../services/notas.service.ts';
 

@@ -7,11 +7,11 @@ import { pool } from "../repository/bd.ts";
 import { authenticateToken } from "../usuario/authUsers.ts";
 import type { RowDataPacket } from 'mysql2';
 import jwt from 'jsonwebtoken';
+const JWT_SECRET = "segredo_super_secreto";
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const JWT_SECRET = "segredo_super_secreto";
 
 declare global {
   namespace Express {
