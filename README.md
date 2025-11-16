@@ -11,7 +11,7 @@
 - **Frontend:**  
   - HTML5  
   - CSS3 com **Bootstrap**  
-- **Banco de Dados:** [MySQL](https://www.postgresql.org/)  
+- **Banco de Dados:** [MySQL](https://www.mysql.com)  
 - **Gerenciamento de Projeto:** [GitHub Projects](https://github.com/features/projects) 
 
 ## Como rodar o projeto
