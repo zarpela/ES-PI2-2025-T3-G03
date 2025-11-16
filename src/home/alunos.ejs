@@ -33,6 +33,24 @@
   </nav>
 
   <main class="dashboard-main pt-5">
+
+    <!-- === MODO DE EDIÇÃO === -->
+    <div class="d-flex justify-content-end align-items-center mt-2 mb-3 px-3">
+      <select id="modoEdicao" class="form-select w-auto" onchange="alternarModoEdicao()">
+
+        <!-- 🔥 MODO EXIBIÇÃO ADICIONADO AQUI -->
+        <option value="exibicao" selected>Exibição</option>
+
+        <option value="componente">Editar por componente</option>
+        <option value="total">Edição Completa</option>
+      </select>
+
+      <select id="componenteSelecionado" class="form-select w-auto ms-2" onchange="habilitarSomenteUmComponente()">
+        <!-- preenchido automaticamente -->
+      </select>
+    </div>
+    <!-- ====================== -->
+
     <div class="d-flex justify-content-between align-items-center mb-3 px-3">
       <div>
         <div class="dashboard-title" id="mainTitle">Carregando...</div>
@@ -115,7 +133,7 @@
     let disciplinaId = null;
     let cursoId = null;
     let instituicaoId = null;
-    let componentes = []; // componente_nota list
+    let componentes = [];
 
     function showInfo(msg) {
       infoModalBody.textContent = msg;
@@ -132,14 +150,16 @@
       const turmaNome = params.get('turma_nome');
 
       mainTitle.textContent = (turmaNome ? `${turmaNome}` : (disciplinaNome ? disciplinaNome : 'Alunos'));
-      // voltar links (se existir)
+
       const btnVoltarCursos = document.getElementById('btnVoltarCursos');
       const btnVoltarDisciplinas = document.getElementById('btnVoltarDisciplinas');
+
       if (btnVoltarCursos) btnVoltarCursos.onclick = (e) => {
         e?.preventDefault();
         const token = localStorage.getItem('token');
         window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
       };
+
       if (btnVoltarDisciplinas) btnVoltarDisciplinas.onclick = (e) => {
         e?.preventDefault();
         const token = localStorage.getItem('token');
@@ -147,7 +167,7 @@
       };
     }
 
-    // monta cabeçalho com colunas estáticas + componentes dinâmicos
+    // MONTA CABEÇALHO
     function buildTableHeader() {
       tableHead.innerHTML = '';
       const tr = document.createElement('tr');
@@ -194,6 +214,7 @@
           return;
         }
         const alunos = await res.json();
+
         if (alunos.length === 0) {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td colspan="${2 + componentes.length}" class="text-center text-muted">Nenhum aluno cadastrado</td>`;
@@ -204,11 +225,25 @@
         alunos.forEach(al => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${al.identificador}</td><td>${al.nome}</td>`;
+
           componentes.forEach(c => {
             const td = document.createElement('td');
-            td.textContent = '-'; // modo visualização (nota ainda não lançada)
+
+            /* === INPUT EDITÁVEL === */
+            td.innerHTML = `
+              <input 
+                type="number"
+                step="0.01"
+                min="0"
+                max="10"
+                class="form-control form-control-sm nota-input nota-${c.sigla}"
+                data-componente="${c.sigla}"
+                disabled
+              >
+            `;
             tr.appendChild(td);
           });
+
           tableBody.appendChild(tr);
         });
       } catch (err) {
@@ -217,6 +252,55 @@
       }
     }
 
+    // === MODO DE EDIÇÃO ===
+    let componentesGlobais = [];
+
+    function carregarSelectDeComponentes(componentes) {
+      componentesGlobais = componentes;
+      const select = document.getElementById("componenteSelecionado");
+      select.innerHTML = "";
+
+      componentes.forEach(c => {
+        const op = document.createElement("option");
+        op.value = c.sigla;
+        op.textContent = c.sigla;
+        select.appendChild(op);
+      });
+
+      habilitarSomenteUmComponente();
+    }
+
+    function alternarModoEdicao() {
+      const modo = document.getElementById("modoEdicao").value;
+
+      if (modo === "exibicao") {
+        // 🔥 EXIBIÇÃO = TUDO DESABILITADO
+        document.querySelectorAll(".nota-input").forEach(inp => inp.disabled = true);
+        return;
+      }
+
+      if (modo === "total") {
+        document.querySelectorAll(".nota-input").forEach(inp => inp.disabled = false);
+        return;
+      }
+
+      // componente
+      habilitarSomenteUmComponente();
+    }
+
+    function habilitarSomenteUmComponente() {
+      const modo = document.getElementById("modoEdicao").value;
+
+      if (modo !== "componente") return;
+
+      const sigla = document.getElementById("componenteSelecionado").value;
+
+      document.querySelectorAll(".nota-input").forEach(inp => {
+        inp.disabled = inp.dataset.componente !== sigla;
+      });
+    }
+    // ==========================
+
     // criar componente via modal
     document.getElementById('btnCriarComponente').addEventListener('click', () => componenteModal.show());
     document.getElementById('componenteForm').addEventListener('submit', async (e) => {
@@ -224,7 +308,9 @@
       const nome = document.getElementById('compNome').value.trim();
       const sigla = document.getElementById('compSigla').value.trim().toUpperCase();
       const descricao = document.getElementById('compDescricao').value.trim();
+
       if (!disciplinaId) { showInfo('disciplina_id ausente na URL'); return; }
+
       const token = localStorage.getItem('token');
       try {
         const res = await fetch('/api/componentes', {
@@ -232,62 +318,51 @@
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ nome, sigla, descricao, disciplina_id: disciplinaId })
         });
+
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro');
+
         componenteModal.hide();
-        // limpa form
         document.getElementById('compNome').value = '';
         document.getElementById('compSigla').value = '';
         document.getElementById('compDescricao').value = '';
-        await init(); // recarrega
+
+        await init();
         showInfo('Componente criado com sucesso');
+
       } catch (err) {
         console.error(err);
         showInfo('Erro ao criar componente: ' + (err.message || err));
       }
     });
 
-    // importar CSV: pega arquivo, parse simples (duas primeiras colunas)
     csvFile.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const text = await file.text();
-      // parsing simples: quebra por linhas, separa por vírgula (não trata escapes complexos)
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-      const alunos = [];
-      for (const line of lines) {
-        // tenta separar por ; ou , (tenta ambos)
-        const parts = line.includes(';') ? line.split(';') : line.split(',');
-        const identificador = (parts[0] || '').trim();
-        const nome = (parts[1] || '').trim();
-        if (!identificador || !nome) continue;
-        alunos.push({ identificador, nome });
-      }
 
-      if (alunos.length === 0) {
-        showInfo('Nenhum aluno válido encontrado no CSV (usa-se as 2 primeiras colunas)');
+      if (!confirm(`Enviar CSV para a turma?`)) {
         csvFile.value = '';
         return;
       }
 
-      if (!confirm(`Enviar ${alunos.length} alunos para a turma? (duplicatas serão ignoradas)`)) {
-        csvFile.value = '';
-        return;
-      }
-
-      // envia ao backend
+      const formData = new FormData();
+      formData.append('file', file);
       const token = localStorage.getItem('token');
+
       try {
-        const res = await fetch('/api/alunos/import', {
+        const res = await fetch(`/notas/turma/${turmaId}/importar-alunos-csv`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ turma_id: turmaId, alunos })
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
         });
+
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Erro na importação');
-        showInfo(`Importação concluída — inseridos: ${data.inserted || 0}, pulados: ${data.skipped || 0}`);
+        if (!res.ok) throw new Error(data.message || 'Erro na importação');
+
+        showInfo(`Importação concluída — inseridos: ${data.adicionados || 0}, pulados: ${data.errosDeLogica || 0}`);
         csvFile.value = '';
         await init();
+
       } catch (err) {
         console.error(err);
         showInfo('Erro ao importar CSV: ' + (err.message || err));
@@ -295,11 +370,15 @@
       }
     });
 
-    // inicializa: carrega componentes e alunos e monta tabela
     async function init() {
       await loadComponentes();
       buildTableHeader();
       await loadAlunos();
+      carregarSelectDeComponentes(componentes);
+
+      // 🔥 DEIXAR EXIBIÇÃO COMO PADRÃO
+      document.getElementById("modoEdicao").value = "exibicao";
+      alternarModoEdicao();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
