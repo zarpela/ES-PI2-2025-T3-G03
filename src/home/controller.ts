@@ -992,6 +992,143 @@ router.get('/api/notas/turma/:turmaId', authenticateToken, async (req, res) => {
   }
 });
 
+// OBTER FÓRMULA DE NOTA FINAL
+router.get('/api/formula-nota-final/:disciplinaId', authenticateToken, async (req, res) => {
+  try {
+    const disciplinaId = req.params.disciplinaId;
+    const userId = req.user?.id;
+
+    if (!disciplinaId) return res.status(400).json({ error: "disciplina_id é obrigatório." });
+
+    // Verifica se o usuário tem acesso à disciplina
+    const [discRows] = await pool.query(
+      "SELECT id FROM disciplina WHERE id = ? AND usuario_id = ?",
+      [disciplinaId, userId]
+    );
+
+    if ((discRows as any[]).length === 0)
+      return res.status(403).json({ error: "Sem permissão para acessar esta disciplina." });
+
+    const [rows] = await pool.query(
+      "SELECT * FROM formula_nota_final WHERE disciplina_id = ?",
+      [disciplinaId]
+    );
+
+    const formula = (rows as any[])[0];
+    res.json(formula || null);
+  } catch (err) {
+    console.error("Erro ao buscar fórmula:", err);
+    res.status(500).json({ error: "Erro ao buscar fórmula." });
+  }
+});
+
+// SALVAR/ATUALIZAR FÓRMULA DE NOTA FINAL
+router.post('/api/formula-nota-final', authenticateToken, async (req, res) => {
+  try {
+    const { disciplina_id, expressao } = req.body;
+    const userId = req.user?.id;
+
+    if (!disciplina_id || !expressao) {
+      return res.status(400).json({ error: "Campos obrigatórios faltando." });
+    }
+
+    // Verifica se o usuário tem acesso à disciplina
+    const [discRows] = await pool.query(
+      "SELECT id FROM disciplina WHERE id = ? AND usuario_id = ?",
+      [disciplina_id, userId]
+    );
+
+    if ((discRows as any[]).length === 0)
+      return res.status(403).json({ error: "Sem permissão para essa disciplina." });
+
+    // Buscar componentes da disciplina para validar
+    const [componentesRows] = await pool.query(
+      "SELECT sigla FROM componente_nota WHERE disciplina_id = ?",
+      [disciplina_id]
+    );
+
+    const componentes = (componentesRows as any[]).map(c => c.sigla);
+    
+    if (componentes.length === 0) {
+      return res.status(400).json({ error: "Não há componentes cadastrados para esta disciplina." });
+    }
+
+    // Validar se todos os componentes estão na fórmula
+    const componentesNaFormula = componentes.filter(sigla => {
+      // Verifica se a sigla aparece na fórmula (case insensitive)
+      const regex = new RegExp(`\\b${sigla}\\b`, 'i');
+      return regex.test(expressao);
+    });
+
+    if (componentesNaFormula.length !== componentes.length) {
+      const faltando = componentes.filter(c => !componentesNaFormula.includes(c));
+      return res.status(400).json({ 
+        error: `Todos os componentes devem estar na fórmula. Faltando: ${faltando.join(', ')}` 
+      });
+    }
+
+    // Validar se a fórmula pode gerar nota final de 10 e não ultrapassa 10
+    try {
+      // Criar uma cópia da expressão para teste
+      let expressaoTeste = expressao;
+      
+      // Substituir todas as siglas por 10 (valor máximo)
+      // componentes é um array de strings (siglas), não objetos
+      componentes.forEach(sigla => {
+        const regex = new RegExp(`\\b${sigla}\\b`, 'gi');
+        expressaoTeste = expressaoTeste.replace(regex, '10');
+      });
+
+      // Avaliar a expressão
+      const resultado = Function('"use strict"; return (' + expressaoTeste + ')')();
+      
+      // Verificar se o resultado é exatamente 10 (com tolerância de 0.01 para erros de ponto flutuante)
+      const diferenca = Math.abs(resultado - 10);
+      if (diferenca > 0.01) {
+        if (resultado > 10) {
+          return res.status(400).json({ 
+            error: `A fórmula pode gerar nota final maior que 10. Quando todas as notas são 10, o resultado é ${resultado.toFixed(2)}. Ajuste a fórmula para que a soma dos pesos/coeficientes seja igual a 1.` 
+          });
+        } else {
+          return res.status(400).json({ 
+            error: `A fórmula não permite alcançar nota final 10. Quando todas as notas são 10, o resultado é ${resultado.toFixed(2)}. Ajuste a fórmula para que a soma dos pesos/coeficientes seja igual a 1.` 
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao validar fórmula:', err);
+      return res.status(400).json({ 
+        error: `Erro ao validar a fórmula. Verifique se a expressão está correta.` 
+      });
+    }
+
+    // Verifica se já existe fórmula
+    const [formulaExistente] = await pool.query(
+      "SELECT id FROM formula_nota_final WHERE disciplina_id = ?",
+      [disciplina_id]
+    );
+
+    if ((formulaExistente as any[]).length > 0) {
+      // Atualiza fórmula existente
+      await pool.query(
+        "UPDATE formula_nota_final SET expressao = ? WHERE disciplina_id = ?",
+        [expressao, disciplina_id]
+      );
+    } else {
+      // Insere nova fórmula
+      await pool.query(
+        "INSERT INTO formula_nota_final (disciplina_id, expressao) VALUES (?, ?)",
+        [disciplina_id, expressao]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Erro ao salvar fórmula:", err);
+    res.status(500).json({ error: "Erro ao salvar fórmula." });
+  }
+});
+
 // SALVAR/ATUALIZAR NOTA
 router.post('/api/notas', authenticateToken, async (req, res) => {
   try {
