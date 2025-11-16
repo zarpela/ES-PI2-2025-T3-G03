@@ -34,37 +34,14 @@
 
   <main class="dashboard-main pt-5">
 
-    <!-- === MODO DE EDIÇÃO === -->
-    <div class="d-flex justify-content-end align-items-center mt-2 mb-3 px-3">
-      <select id="modoEdicao" class="form-select w-auto" onchange="alternarModoEdicao()">
-
-        <!-- 🔥 MODO EXIBIÇÃO ADICIONADO AQUI -->
-        <option value="exibicao" selected>Exibição</option>
-
-        <option value="componente">Editar por componente</option>
-        <option value="total">Edição Completa</option>
-      </select>
-
-      <select id="componenteSelecionado" class="form-select w-auto ms-2" onchange="habilitarSomenteUmComponente()">
-        <!-- preenchido automaticamente -->
-      </select>
-    </div>
-    <!-- ====================== -->
-
-    <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-      <div>
+    <div class="d-flex justify-content-center mb-3 px-3">
+      <div class="text-center">
         <div class="dashboard-title" id="mainTitle">Carregando...</div>
         <div class="dashboard-desc">Gerencie os alunos e componentes de nota</div>
       </div>
-      <div class="d-flex gap-2">
-        <label class="btn btn-outline-secondary mb-0">
-          Importar CSV <input id="csvFile" type="file" accept=".csv" hidden>
-        </label>
-        <button id="btnCriarComponente" class="btn btn-primary">Novo componente</button>
-      </div>
     </div>
 
-    <div class="instituicoes-header">Alunos</div>
+    <div class="instituicoes-header text-center">Alunos</div>
 
     <div class="card p-3 mt-3 mx-3">
       <div class="table-responsive">
@@ -74,6 +51,38 @@
         </table>
       </div>
     </div>
+
+    <!-- === CONTROLES ABAIXO DA TABELA === -->
+    <div class="d-flex justify-content-between align-items-center mt-3 px-3">
+      <!-- ComboBox à esquerda -->
+      <div class="d-flex align-items-center gap-2">
+        <select id="modoEdicao" class="form-select w-auto" onchange="alternarModoEdicao()">
+          <!-- 🔥 MODO EXIBIÇÃO ADICIONADO AQUI -->
+          <option value="exibicao" selected>Exibição</option>
+          <option value="componente">Editar por componente</option>
+          <option value="total">Edição Completa</option>
+        </select>
+
+        <select id="componenteSelecionado" class="form-select w-auto" onchange="habilitarSomenteUmComponente()">
+          <!-- preenchido automaticamente -->
+        </select>
+      </div>
+
+      <!-- Botões à direita -->
+      <div class="d-flex flex-column gap-2">
+        <div class="d-flex gap-2">
+          <label class="btn btn-outline-secondary mb-0">
+            Importar CSV <input id="csvFile" type="file" accept=".csv" hidden>
+          </label>
+          <button id="btnExportarCsv" class="btn btn-outline-success mb-0">Exportar CSV</button>
+        </div>
+        <div class="d-flex gap-2">
+          <button id="btnCriarComponente" class="btn btn-primary">Novo componente</button>
+          <button id="btnRemoverComponente" class="btn btn-danger">Remover componente</button>
+        </div>
+      </div>
+    </div>
+    <!-- =================================== -->
   </main>
 
   <!-- Modal: criar componente -->
@@ -106,6 +115,34 @@
     </div>
   </div>
 
+  <!-- Modal: remover componente -->
+  <div class="modal fade" id="removerComponenteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Remover componente de nota</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Selecione o componente a ser removido</label>
+            <select class="form-select" id="componenteRemoverSelect">
+              <option value="">Selecione um componente...</option>
+              <!-- preenchido automaticamente -->
+            </select>
+          </div>
+          <div class="alert alert-warning">
+            <strong>Atenção:</strong> Esta ação não pode ser desfeita. Todas as notas relacionadas a este componente serão removidas.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" type="button" id="btnConfirmarRemocao">Remover componente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: mensagem simples -->
   <div class="modal fade" id="infoModal" tabindex="-1">
     <div class="modal-dialog modal-sm">
@@ -126,6 +163,7 @@
     const mainTitle = document.getElementById('mainTitle');
     const csvFile = document.getElementById('csvFile');
     const componenteModal = new bootstrap.Modal(document.getElementById('componenteModal'));
+    const removerComponenteModal = new bootstrap.Modal(document.getElementById('removerComponenteModal'));
     const infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
     const infoModalBody = document.getElementById('infoModalBody');
 
@@ -222,25 +260,116 @@
           return;
         }
 
+        // Buscar notas existentes
+        let notasExistentes = {};
+        try {
+          const notasRes = await fetch(`/api/notas/turma/${turmaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (notasRes.ok) {
+            const notas = await notasRes.json();
+            notas.forEach(nota => {
+              const key = `${nota.aluno_id}_${nota.componente_sigla}`;
+              notasExistentes[key] = nota.valor;
+            });
+          }
+        } catch (err) {
+          console.error('Erro ao carregar notas:', err);
+        }
+
         alunos.forEach(al => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${al.identificador}</td><td>${al.nome}</td>`;
 
           componentes.forEach(c => {
             const td = document.createElement('td');
+            const notaKey = `${al.id}_${c.sigla}`;
+            const valorNota = notasExistentes[notaKey] || '';
 
             /* === INPUT EDITÁVEL === */
-            td.innerHTML = `
-              <input 
-                type="number"
-                step="0.01"
-                min="0"
-                max="10"
-                class="form-control form-control-sm nota-input nota-${c.sigla}"
-                data-componente="${c.sigla}"
-                disabled
-              >
-            `;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.01';
+            input.min = '0';
+            input.max = '10';
+            input.className = `form-control form-control-sm nota-input nota-${c.sigla}`;
+            input.dataset.componente = c.sigla;
+            input.dataset.alunoId = al.id;
+            input.value = valorNota;
+            input.disabled = true;
+
+            // Adicionar validação em tempo real
+            input.addEventListener('input', (e) => {
+              const inputEl = e.target;
+              const valor = inputEl.value.trim();
+              
+              if (valor === '') {
+                inputEl.classList.remove('is-invalid');
+                return;
+              }
+
+              const valorNumerico = parseFloat(valor);
+              if (isNaN(valorNumerico) || valorNumerico < 0 || valorNumerico > 10) {
+                inputEl.classList.add('is-invalid');
+              } else {
+                inputEl.classList.remove('is-invalid');
+              }
+            });
+
+            // Adicionar event listener para salvar nota quando o usuário sair do campo
+            input.addEventListener('blur', async (e) => {
+              const inputEl = e.target;
+              const valor = inputEl.value.trim();
+              
+              if (valor === '' || valor === null || valor === undefined) {
+                inputEl.classList.remove('is-invalid');
+                return; // Não salva se estiver vazio
+              }
+
+              const valorNumerico = parseFloat(valor);
+              if (isNaN(valorNumerico)) {
+                inputEl.classList.add('is-invalid');
+                showInfo('Por favor, insira notas válidas! (0-10)');
+                inputEl.value = '';
+                return;
+              }
+
+              if (valorNumerico < 0 || valorNumerico > 10) {
+                inputEl.classList.add('is-invalid');
+                showInfo('Por favor, insira notas válidas! (0-10)');
+                inputEl.value = '';
+                return;
+              }
+
+              inputEl.classList.remove('is-invalid');
+
+              const token = localStorage.getItem('token');
+              try {
+                const res = await fetch('/api/notas', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    aluno_id: inputEl.dataset.alunoId,
+                    turma_id: turmaId,
+                    componente_sigla: inputEl.dataset.componente,
+                    valor: valorNumerico
+                  })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                  throw new Error(data.error || 'Erro ao salvar nota');
+                }
+              } catch (err) {
+                console.error('Erro ao salvar nota:', err);
+                showInfo('Erro ao salvar nota: ' + (err.message || err));
+              }
+            });
+
+            td.appendChild(input);
             tr.appendChild(td);
           });
 
@@ -336,6 +465,60 @@
       }
     });
 
+    // remover componente via modal
+    document.getElementById('btnRemoverComponente').addEventListener('click', () => {
+      const select = document.getElementById('componenteRemoverSelect');
+      select.innerHTML = '<option value="">Selecione um componente...</option>';
+      
+      if (componentes.length === 0) {
+        showInfo('Não há componentes para remover');
+        return;
+      }
+
+      componentes.forEach(c => {
+        const op = document.createElement('option');
+        op.value = c.id;
+        op.textContent = `${c.sigla} - ${c.nome}`;
+        select.appendChild(op);
+      });
+
+      removerComponenteModal.show();
+    });
+
+    document.getElementById('btnConfirmarRemocao').addEventListener('click', async () => {
+      const componenteId = document.getElementById('componenteRemoverSelect').value;
+      
+      if (!componenteId) {
+        showInfo('Selecione um componente para remover');
+        return;
+      }
+
+      if (!confirm('Tem certeza que deseja remover este componente? Esta ação não pode ser desfeita.')) {
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/componentes/${componenteId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao remover componente');
+
+        removerComponenteModal.hide();
+        document.getElementById('componenteRemoverSelect').value = '';
+
+        await init();
+        showInfo('Componente removido com sucesso');
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao remover componente: ' + (err.message || err));
+      }
+    });
+
     csvFile.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -367,6 +550,145 @@
         console.error(err);
         showInfo('Erro ao importar CSV: ' + (err.message || err));
         csvFile.value = '';
+      }
+    });
+
+    // Exportar CSV
+    document.getElementById('btnExportarCsv').addEventListener('click', async () => {
+      if (!turmaId) {
+        showInfo('turma_id não fornecido na URL');
+        return;
+      }
+
+      if (componentes.length === 0) {
+        showInfo('Não há componentes cadastrados para exportar');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/notas/turma/${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao buscar notas');
+        }
+
+        const notas = await res.json();
+
+        // Organizar notas por aluno
+        const notasPorAluno = {};
+        notas.forEach(nota => {
+          const key = `${nota.aluno_id}_${nota.identificador}_${nota.nome}`;
+          if (!notasPorAluno[key]) {
+            notasPorAluno[key] = {
+              identificador: nota.identificador,
+              nome: nota.nome,
+              notas: {}
+            };
+          }
+          // Armazenar o valor da nota (pode ser null se não houver nota)
+          notasPorAluno[key].notas[nota.componente_sigla] = nota.valor;
+        });
+
+        // Validar se todas as notas estão preenchidas e são válidas
+        const alunos = Object.values(notasPorAluno);
+        
+        for (const aluno of alunos) {
+          for (const componente of componentes) {
+            const valor = aluno.notas[componente.sigla];
+            
+            // Verificar se a nota está preenchida
+            // Considera válido: números (incluindo 0), strings numéricas não vazias
+            // Considera inválido: null, undefined, string vazia, string '-'
+            if (valor === null || valor === undefined || valor === '' || valor === '-') {
+              showInfo('Só é possível realizar a exportação quando todos os componentes possuírem nota lançada');
+              return;
+            }
+            
+            // Verificar se é um número válido (mesmo que seja string numérica)
+            const valorNumerico = parseFloat(valor);
+            if (isNaN(valorNumerico)) {
+              showInfo('Só é possível realizar a exportação quando todos os componentes possuírem nota lançada');
+              return;
+            }
+
+            // Verificar se a nota está no range válido (0-10)
+            if (valorNumerico < 0 || valorNumerico > 10) {
+              showInfo('Por favor, insira notas válidas! (0-10)');
+              return;
+            }
+          }
+        }
+
+        // Gerar CSV
+        const headers = ['Matrícula', 'Nome', ...componentes.map(c => c.sigla)];
+        const rows = alunos.map(aluno => {
+          const linha = [
+            aluno.identificador,
+            aluno.nome,
+            ...componentes.map(c => aluno.notas[c.sigla] || '')
+          ];
+          return linha.map(campo => {
+            // Escapar campos que contêm vírgula ou aspas
+            if (typeof campo === 'string' && (campo.includes(',') || campo.includes('"') || campo.includes('\n'))) {
+              return `"${campo.replace(/"/g, '""')}"`;
+            }
+            return campo;
+          }).join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+
+        // Gerar nome do arquivo: YYYY-MM-DD_HHmmssms-TurmaX_Sigla.csv
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+        
+        const params = new URLSearchParams(window.location.search);
+        const turmaNome = params.get('turma_nome') || `Turma${turmaId}`;
+        
+        // Buscar sigla da disciplina
+        let disciplinaSigla = 'SIGLA';
+        if (disciplinaId) {
+          try {
+            const disciplinaRes = await fetch(`/api/disciplinas/${disciplinaId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (disciplinaRes.ok) {
+              const disciplina = await disciplinaRes.json();
+              disciplinaSigla = disciplina.sigla || 'SIGLA';
+            }
+          } catch (err) {
+            console.error('Erro ao buscar sigla da disciplina:', err);
+          }
+        }
+        
+        const fileName = `${year}-${month}-${day}_${hours}${minutes}${seconds}${milliseconds}-${turmaNome}_${disciplinaSigla}.csv`;
+
+        // Fazer download
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showInfo('CSV exportado com sucesso');
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao exportar CSV: ' + (err.message || err));
       }
     });
 
