@@ -162,3 +162,9 @@ body {
   .instituicoes-wrapper{gap:12px;}
   .card-dashboard, .card-add-dashboard {max-width: 95vw; min-width: 90vw;}
 }
+
+#breadcrumbDisciplinaSelecionada {
+  color: #2563EB !important; /* Azul igual ao link de curso */
+  font-weight: 600;
+  cursor: pointer;
+}

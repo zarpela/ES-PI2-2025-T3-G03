@@ -19,13 +19,15 @@
         <span class="navbar-text me-1" style="color:#999;">
           >
         </span>
-        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px; cursor: pointer;">
+        <!-- Alterado por JS -->
+        <a href="#" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" id="breadcrumbDisciplina">
           Cursos
         </a>
         <span class="navbar-text me-1" style="color:#999;">
           >
         </span>
-        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" style="letter-spacing:0.5px; cursor: default;" id="breadcrumbDisciplina">
+        
+        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-1" style="letter-spacing:0.5px">
           Disciplinas
         </span>
       </div>
@@ -139,22 +141,34 @@
       cardsContainer.appendChild(card);
     }
 
-    function captureParams() {
+    async function captureParams() {
       const urlParams = new URLSearchParams(window.location.search);
       cursoId = urlParams.get('curso_id');
       instituicaoId = urlParams.get('instituicao_id');
       cursoNome = urlParams.get('curso_nome');
       
-      console.log('Parâmetros capturados - Curso:', cursoId, 'Instituição:', instituicaoId, 'Nome do Curso:', cursoNome);
-      
-      // Atualiza os títulos com o nome do curso
       if (cursoNome) {
         mainTitle.textContent = cursoNome;
         breadcrumbDisciplina.textContent = cursoNome;
+      } else if (cursoId) {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/cursos/${cursoId}`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const curso = await res.json();
+            mainTitle.textContent = curso.nome;
+            breadcrumbDisciplina.textContent = curso.nome;
+          } else {
+            mainTitle.textContent = cursoId;
+            breadcrumbDisciplina.textContent = cursoId;
+          }
+        } catch {
+          mainTitle.textContent = cursoId;
+          breadcrumbDisciplina.textContent = cursoId;
+        }
       } else {
-        // Se cursoNome não existir, usa o cursoId
-        mainTitle.textContent = cursoId || 'Carregando...';
-        breadcrumbDisciplina.textContent = cursoId || 'Carregando...';
+        mainTitle.textContent = 'Carregando...';
+        breadcrumbDisciplina.textContent = 'Carregando...';
       }
       
       // Configura o botão voltar

@@ -92,6 +92,22 @@ router.get('/api/disciplinas', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/api/disciplinas/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const id = req.params.id;
+    const [rows] = await pool.query(
+      'SELECT * FROM disciplina WHERE id = ? AND usuario_id = ?',
+      [id, userId]
+    );
+    if (!(rows as any[]).length) return res.status(404).json({ error: 'Disciplina não encontrada' });
+    res.json((rows as any[])[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar disciplina por id' });
+  }
+});
+
+
 router.post('/api/disciplinas', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
@@ -393,21 +409,42 @@ router.post('/api/cursos', authenticateToken, async (req, res) => {
     if (!userId) {
       return res.status(401).json({ error: 'Usuário não autenticado' });
     }
-    
-    const [result] = await pool.query
-    ('INSERT INTO instituicao (nome, cnpj, usuario_id) VALUES (?, ?, ?)', 
-      [data.nome, data.cnpj || null, userId]);
+
+    // data deve conter: { nome, instituicao_id }
+    const [result] = await pool.query(
+      'INSERT INTO curso (nome, instituicao_id, usuario_id) VALUES (?, ?, ?)',
+      [data.nome, data.instituicao_id || null, userId]
+    );
+
     const insertId = (result as any).insertId;
-    res.status(201).json({ 
-      id: insertId, 
-      nome: data.nome, 
+
+    res.status(201).json({
+      id: insertId,
+      nome: data.nome,
       instituicao_id: data.instituicao_id || null,
-      usuario_id: userId 
+      usuario_id: userId
     });
   } catch (err) {
     console.error('Erro ao adicionar curso:', err);
     const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
     res.status(500).json({ error: 'Erro ao adicionar curso', details: errorMessage });
+  }
+});
+
+router.get('/api/cursos/:id', authenticateToken, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const userId = req.user?.id;
+    const [rows] = await pool.query(
+      'SELECT c.*, i.nome AS instituicao_nome FROM curso c LEFT JOIN instituicao i ON c.instituicao_id = i.id WHERE c.id = ? AND c.usuario_id = ?',
+      [id, userId]
+    );
+    if ((rows as any[]).length === 0) {
+      return res.status(404).json({ error: 'Curso não encontrado' });
+    }
+    res.json((rows as any[])[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar curso por id' });
   }
 });
 
@@ -447,7 +484,7 @@ router.get('/api/turmas', authenticateToken, async (req, res) => {
     }
 
     let query = `
-      SELECT t.*
+      SELECT t.*, d.nome as disciplina_nome
       FROM turma t
       JOIN disciplina d ON t.disciplina_id = d.id
       WHERE d.usuario_id = ?
@@ -508,6 +545,23 @@ router.post('/api/turmas', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/api/turmas/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const id = req.params.id;
+    const [rows] = await pool.query(
+      `SELECT t.*, d.nome as disciplina_nome
+       FROM turma t
+       JOIN disciplina d ON t.disciplina_id = d.id
+       WHERE t.id = ? AND d.usuario_id = ?`,
+      [id, userId]
+    );
+    if (!(rows as any[]).length) return res.status(404).json({ error: 'Turma não encontrada' });
+    res.json((rows as any[])[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao buscar turma por id' });
+  }
+});
 
 // EDITAR TURMA
 router.put('/api/turmas/:id', authenticateToken, async (req, res) => {

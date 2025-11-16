@@ -16,24 +16,32 @@
 
       <div>
         <!-- Instituições -->
-        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px;">
+          Instituições
+        </a>
         <span class="navbar-text me-1" style="color:#999;">></span>
 
         <!-- Cursos -->
-        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Cursos</a>
+        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px; cursor: pointer;">
+          Cursos
+        </a>
         <span class="navbar-text me-1" style="color:#999;">></span>
 
-        <!-- Disciplinas -->
-        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
+        <!-- Disciplina Selecionada -->
+        <span id="breadcrumbDisciplinaSelecionada" class="navbar-brand mb-0 h6 fw-semibold text-muted me-1" style="letter-spacing:0.5px; cursor: pointer;">
+          -
+        </span>
         <span class="navbar-text me-1" style="color:#999;">></span>
 
-        <!-- Turmas (atual) -->
-        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" id="breadcrumbTurmas" style="cursor:default;">
+        <!-- Turmas -->
+        <span id="breadcrumbTurmas" class="navbar-brand mb-0 h6 fw-semibold text-muted me-1" style="color:#999;">
           Turmas
         </span>
       </div>
 
-      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">NotaDez</span>
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">
+        NotaDez
+      </span>
     </div>
   </nav>
 
@@ -137,31 +145,84 @@
       cardsContainer.appendChild(card);
     }
 
-    function captureParams() {
+    async function captureParams() {
       const url = new URLSearchParams(window.location.search);
 
       disciplinaId = url.get("disciplina_id");
       cursoId = url.get("curso_id");
       instituicaoId = url.get("instituicao_id");
+      let cursoNome = url.get("curso_nome");
+      let disciplinaNome = url.get("disciplina_nome");
 
-      const disciplinaNome = url.get("disciplina_nome");
-      const cursoNome = url.get("curso_nome");
-      const instituicaoNome = url.get("instituicao_nome");
+      // Buscar nome do curso se não veio por parâmetro
+      if (!cursoNome && cursoId) {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`/api/cursos/${cursoId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            cursoNome = data.nome;
+          }
+        } catch {}
+      }
+
+      // Se não veio o nome na URL, buscar no backend
+      if (!disciplinaNome && disciplinaId) {
+        const token = localStorage.getItem("token");
+        try {
+          const res = await fetch(`/api/disciplinas/${disciplinaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const disciplina = await res.json();
+            disciplinaNome = disciplina.nome;
+          }
+        } catch {
+          // Erro ao buscar, deixamos disciplinaNome sem alteração
+        }
+      }
 
       mainTitle.textContent = disciplinaNome || "Turmas";
+      document.getElementById('breadcrumbDisciplinaSelecionada').textContent = disciplinaNome || "-";
 
-      // Voltar para cursos
+      // Configuração dos botões "Voltar"
       btnVoltarCursos.onclick = () => {
         const token = localStorage.getItem("token");
         window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
       };
 
-      // Voltar para disciplinas
       btnVoltarDisciplinas.onclick = () => {
         const token = localStorage.getItem("token");
         window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
       };
     }
+
+    async function atualizarBreadcrumbDisciplina() {
+      const url = new URLSearchParams(window.location.search);
+      let disciplinaNome = url.get("disciplina_nome");
+      const disciplinaId = url.get("disciplina_id");
+
+      if (!disciplinaNome && disciplinaId) {
+        // Busca pelo backend
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`/api/disciplinas/${disciplinaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            disciplinaNome = data.nome;
+          }
+        } catch {}
+      }
+
+      // Atualiza a div ou span do breadcrumb na navbar
+      document.getElementById('breadcrumbDisciplinaSelecionada').textContent = disciplinaNome || "-";
+    }
+
+
 
     async function loadTurmas() {
       cardsContainer.innerHTML = "";
@@ -185,8 +246,9 @@
         card.className = "card-dashboard";
         card.innerHTML = `
           <div class="title">${turma.nome} <small style="font-weight:400;">(${turma.apelido || "—"})</small></div>
-          <div class="desc">Código: ${turma.codigo}</div>
+          <div class="desc">Disciplina: ${turma.disciplina_nome || "N/A"}</div>
           <div class="badges">
+            <span class="badge-custom">Código: ${turma.codigo}</span>
             <span class="badge-custom">ID: ${turma.id}</span>
           </div>
           <div class="actions">
@@ -220,6 +282,41 @@
 
       renderAddCard();
     }
+
+    async function atualizarBreadcrumbs() {
+      const url = new URLSearchParams(window.location.search);
+
+      let cursoNome = url.get("curso_nome");
+      let disciplinaNome = url.get("disciplina_nome");
+      const cursoId = url.get("curso_id");
+      const disciplinaId = url.get("disciplina_id");
+
+      if (!cursoNome && cursoId) {
+        const token = localStorage.getItem("token");
+        const resCurso = await fetch(`/api/cursos/${cursoId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (resCurso.ok) {
+          const curso = await resCurso.json();
+          cursoNome = curso.nome;
+        }
+      }
+
+      if (!disciplinaNome && disciplinaId) {
+        const token = localStorage.getItem("token");
+        const resDisciplina = await fetch(`/api/disciplinas/${disciplinaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (resDisciplina.ok) {
+          const disciplina = await resDisciplina.json();
+          disciplinaNome = disciplina.nome;
+        }
+      }
+
+      document.getElementById("btnVoltarCursos").textContent = cursoNome || "Cursos";
+      document.getElementById("breadcrumbDisciplinaSelecionada").textContent = disciplinaNome || "-";
+    }
+
 
     function abrirModalEditar(turma) {
       editCodigoTurmaInput.value = turma.codigo;
@@ -285,10 +382,12 @@
       }
     });
 
-    window.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", async () => {
+      await atualizarBreadcrumbs();
       captureParams();
       loadTurmas();
     });
+
   </script>
 
 </body>
