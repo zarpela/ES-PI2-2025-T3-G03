@@ -1,4 +1,4 @@
-//Desenvolvido por Rafael Henrique dos Santos Inácio
+//Desenvolvido por Rafael Inácio|Murillo Iamarino| Guilherme Moreira | Marcelo Zarpelon | Rafael Candian
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -45,6 +45,14 @@ router.get('/turmas', (req, res) => {
 
 router.get('/cursos', (req, res) => {
   res.render(path.join(__dirname, 'cursos.ejs'));
+});
+
+router.get('/alunos', (req, res) => {
+  res.render(path.join(__dirname, 'alunos.ejs'));
+});
+
+router.get('/componentes', (req, res) => {
+  res.render(path.join(__dirname, 'componentes.ejs'));
 });
 
 // DISCIPLINAS COM USUÁRIO
@@ -427,85 +435,392 @@ router.delete('/api/cursos/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// TURMAS
+// LISTAR TURMAS
 router.get('/api/turmas', authenticateToken, async (req, res) => {
   try {
+    
     const userId = req.user?.id;
-    const [rows] = await pool.query(`
-      SELECT turma.* FROM turma
-      JOIN disciplina ON turma.disciplina_id = disciplina.id
-      WHERE disciplina.usuario_id = ?
-    `, [userId]);
+    const disciplinaId = req.query.disciplina_id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    let query = `
+      SELECT t.*
+      FROM turma t
+      JOIN disciplina d ON t.disciplina_id = d.id
+      WHERE d.usuario_id = ?
+    `;
+
+    const params: any[] = [userId];
+
+    if (disciplinaId) {
+      query += ` AND t.disciplina_id = ?`;
+      params.push(Number(disciplinaId));
+    }
+
+    const [rows] = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar turmas' });
+    console.error("Erro ao buscar turmas:", err);
+    res.status(500).json({ error: "Erro ao buscar turmas" });
   }
 });
 
+
+// CRIAR TURMA
 router.post('/api/turmas', authenticateToken, async (req, res) => {
   try {
-    const data = req.body;
-    const [result] = await pool.query(
-      'INSERT INTO turma (codigo, nome, apelido, disciplina_id) VALUES (?, ?, ?, ?)',
-      [data.codigo, data.nome, data.apelido || null, data.disciplina_id]
+    const { codigo, nome, apelido, disciplina_id } = req.body;
+    const userId = req.user?.id;
+
+    if (!codigo || !nome || !disciplina_id) {
+      return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+    }
+
+    // Verifica se disciplina pertence ao usuário
+    const [discRows] = await pool.query(
+      "SELECT id FROM disciplina WHERE id = ? AND usuario_id = ?",
+      [disciplina_id, userId]
     );
-    const insertId = (result as any).insertId;
-    res.status(201).json({ id: insertId, ...data });
+
+    if ((discRows as any[]).length === 0) {
+      return res.status(403).json({ error: "Sem permissão para usar esta disciplina." });
+    }
+
+    const [result] = await pool.query(
+      `INSERT INTO turma (codigo, nome, apelido, disciplina_id, usuario_id)
+       VALUES (?, ?, ?, ?, ?)`,
+       [codigo, nome, apelido || null, disciplina_id, userId]
+    );
+
+    res.status(201).json({
+      id: (result as any).insertId,
+      codigo,
+      nome,
+      apelido,
+      disciplina_id
+    });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao adicionar turma' });
+    console.error("Erro ao adicionar turma:", err);
+    res.status(500).json({ error: "Erro ao adicionar turma" });
   }
 });
 
+
+// EDITAR TURMA
 router.put('/api/turmas/:id', authenticateToken, async (req, res) => {
   try {
-    const id = Number(req.params.id);
+    const turmaId = Number(req.params.id);
     const userId = req.user?.id;
+    const { codigo, nome, apelido } = req.body;
+
     const [rows] = await pool.query(`
-      SELECT turma.* FROM turma
-      JOIN disciplina ON turma.disciplina_id = disciplina.id
-      WHERE turma.id = ? AND disciplina.usuario_id = ?
-    `, [id, userId]);
-    const turma = (rows as any[])[0];
-    if (!turma) return res.status(404).json({ error: 'Turma não encontrada ou sem permissão' });
-    const data = req.body;
-    await pool.query('UPDATE turma SET codigo = ?, nome = ?, apelido = ? WHERE id = ?', 
-      [data.codigo, data.nome, data.apelido || null, id]);
-    res.json({ id });
+      SELECT t.*
+      FROM turma t
+      JOIN disciplina d ON t.disciplina_id = d.id
+      WHERE t.id = ? AND d.usuario_id = ?
+    `, [turmaId, userId]);
+
+    if ((rows as any[]).length === 0) {
+      return res.status(404).json({ error: "Turma não encontrada ou sem permissão." });
+    }
+
+    await pool.query(`
+      UPDATE turma
+      SET codigo = ?, nome = ?, apelido = ?
+      WHERE id = ?
+    `, [codigo, nome, apelido || null, turmaId]);
+
+    res.json({ id: turmaId, message: "Turma atualizada com sucesso." });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao editar turma.' });
+    console.error("Erro ao editar turma:", err);
+    res.status(500).json({ error: "Erro ao editar turma." });
   }
 });
 
+
+// DELETAR TURMA
 router.delete('/api/turmas/:id', authenticateToken, async (req, res) => {
   try {
-    const id = Number(req.params.id);
+    const turmaId = Number(req.params.id);
     const userId = req.user?.id;
+
     const [rows] = await pool.query(`
-      SELECT disciplina.usuario_id FROM turma 
-      JOIN disciplina ON turma.disciplina_id = disciplina.id
-      WHERE turma.id = ? AND disciplina.usuario_id = ?
-    `, [id, userId]);
-    const turma = (rows as any[])[0];
-    if (!turma) return res.status(404).json({ error: 'Turma não encontrada ou sem permissão' });
-    await pool.query('DELETE FROM turma WHERE id = ?', [id]);
-    res.json({ id });
+      SELECT t.id
+      FROM turma t
+      JOIN disciplina d ON t.disciplina_id = d.id
+      WHERE t.id = ? AND d.usuario_id = ?
+    `, [turmaId, userId]);
+
+    if ((rows as any[]).length === 0) {
+      return res.status(404).json({ error: "Turma não encontrada ou sem permissão." });
+    }
+
+    await pool.query("DELETE FROM turma WHERE id = ?", [turmaId]);
+
+    res.json({ id: turmaId, message: "Turma deletada com sucesso." });
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao deletar turma.' });
+    console.error("Erro ao deletar turma:", err);
+    res.status(500).json({ error: "Erro ao deletar turma." });
   }
 });
 
-router.get('/api/turmas/disciplinas/:id', authenticateToken, async (req, res) => {
+// LISTAR ALUNOS DA TURMA
+router.get('/api/alunos', authenticateToken, async (req, res) => {
   try {
-    const disciplinaId = Number(req.params.id);
-    const userId = req.user?.id;
-    const [rows] = await pool.query(`
-      SELECT turma.* FROM turma
-      JOIN disciplina ON turma.disciplina_id = disciplina.id
-      WHERE disciplina.id = ? AND disciplina.usuario_id = ?
-    `, [disciplinaId, userId]);
+    const turmaId = req.query.turma_id;
+    if (!turmaId) return res.status(400).json({ error: "turma_id é obrigatório." });
+
+    const [rows] = await pool.query(
+      `SELECT a.id, a.nome, a.identificador
+       FROM aluno a
+       JOIN aluno_turma at ON at.aluno_id = a.id
+       WHERE at.turma_id = ?`,
+      [turmaId]
+    );
+
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: 'Erro ao buscar turmas por disciplina' });
+    console.error("Erro ao buscar alunos:", err);
+    res.status(500).json({ error: "Erro ao buscar alunos." });
+  }
+});
+
+
+// CRIAR ALUNO E VINCULAR À TURMA
+router.post('/api/alunos', authenticateToken, async (req, res) => {
+  try {
+    const { identificador, nome, turma_id } = req.body;
+    if (!identificador || !nome || !turma_id) {
+      return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+    }
+
+    // Verifica se aluno já existe
+    let alunoId: number;
+
+    const [checkAluno] = await pool.query(
+      "SELECT id FROM aluno WHERE identificador = ?",
+      [identificador]
+    );
+
+    if ((checkAluno as any[]).length > 0) {
+      alunoId = (checkAluno as any[])[0].id;
+    } else {
+      // Criar aluno novo
+      const [insertA] = await pool.query(
+        "INSERT INTO aluno (identificador, nome) VALUES (?, ?)",
+        [identificador, nome]
+      );
+      alunoId = (insertA as any).insertId;
+    }
+
+    // Verifica se já está vinculado
+    const [checkVinculo] = await pool.query(
+      "SELECT id FROM aluno_turma WHERE aluno_id = ? AND turma_id = ?",
+      [alunoId, turma_id]
+    );
+
+    if ((checkVinculo as any[]).length > 0) {
+      return res.status(400).json({ error: "Aluno já vinculado à turma." });
+    }
+
+    // Criar vínculo
+    await pool.query(
+      "INSERT INTO aluno_turma (aluno_id, turma_id) VALUES (?, ?)",
+      [alunoId, turma_id]
+    );
+
+    res.status(201).json({ id: alunoId, nome, identificador });
+
+  } catch (err) {
+    console.error("Erro ao adicionar aluno:", err);
+    res.status(500).json({ error: "Erro ao adicionar aluno." });
+  }
+});
+
+
+// EDITAR ALUNO
+router.put('/api/alunos/:id', authenticateToken, async (req, res) => {
+  try {
+    const alunoId = req.params.id;
+    const { identificador, nome } = req.body;
+
+    if (!identificador || !nome) {
+      return res.status(400).json({ error: "Todos os campos são obrigatórios." });
+    }
+
+    await pool.query(
+      "UPDATE aluno SET identificador = ?, nome = ? WHERE id = ?",
+      [identificador, nome, alunoId]
+    );
+
+    res.json({ id: alunoId, message: "Aluno atualizado com sucesso." });
+  } catch (err) {
+    console.error("Erro ao editar aluno:", err);
+    res.status(500).json({ error: "Erro ao editar aluno." });
+  }
+});
+
+
+// REMOVER ALUNO DA TURMA
+router.delete('/api/alunos/:id', authenticateToken, async (req, res) => {
+  try {
+    const alunoId = req.params.id;
+    const turmaId = req.query.turma_id;
+
+    if (!turmaId) {
+      return res.status(400).json({ error: "turma_id é obrigatório para remover o vínculo." });
+    }
+
+    const [rows] = await pool.query(
+      "DELETE FROM aluno_turma WHERE aluno_id = ? AND turma_id = ?",
+      [alunoId, turmaId]
+    );
+
+    res.json({ id: alunoId, message: "Aluno removido da turma." });
+
+  } catch (err) {
+    console.error("Erro ao deletar aluno:", err);
+    res.status(500).json({ error: "Erro ao deletar aluno." });
+  }
+});
+
+// LISTAR COMPONENTES DE UMA DISCIPLINA
+router.get('/api/componentes', authenticateToken, async (req, res) => {
+  try {
+    const disciplinaId = req.query.disciplina_id;
+    const userId = req.user?.id;
+
+    if (!disciplinaId)
+      return res.status(400).json({ error: "disciplina_id é obrigatório." });
+
+    // Verifica se o usuário é dono da disciplina
+    const [discRows] = await pool.query(
+      "SELECT id FROM disciplina WHERE id = ? AND usuario_id = ?",
+      [disciplinaId, userId]
+    );
+
+    if ((discRows as any[]).length === 0)
+      return res.status(403).json({ error: "Sem permissão para acessar esta disciplina." });
+
+    const [rows] = await pool.query(
+      "SELECT * FROM componente_nota WHERE disciplina_id = ? ORDER BY id ASC",
+      [disciplinaId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Erro ao listar componentes:", err);
+    res.status(500).json({ error: "Erro ao listar componentes." });
+  }
+});
+
+// CRIAR COMPONENTE DE NOTA
+router.post('/api/componentes', authenticateToken, async (req, res) => {
+  try {
+    const { nome, sigla, descricao, disciplina_id } = req.body;
+    const userId = req.user?.id;
+
+    if (!nome || !sigla || !disciplina_id)
+      return res.status(400).json({ error: "Campos obrigatórios faltando." });
+
+    // Verifica se disciplina pertence ao usuário
+    const [discRows] = await pool.query(
+      "SELECT id FROM disciplina WHERE id = ? AND usuario_id = ?",
+      [disciplina_id, userId]
+    );
+
+    if ((discRows as any[]).length === 0)
+      return res.status(403).json({ error: "Sem permissão para essa disciplina." });
+
+    const [result] = await pool.query(
+      `INSERT INTO componente_nota (nome, sigla, descricao, disciplina_id)
+         VALUES (?, ?, ?, ?)`,
+      [nome, sigla.toUpperCase(), descricao || null, disciplina_id]
+    );
+
+    res.status(201).json({
+      id: (result as any).insertId,
+      nome,
+      sigla: sigla.toUpperCase(),
+      descricao
+    });
+
+  } catch (err) {
+    console.error("Erro ao criar componente:", err);
+    res.status(500).json({ error: "Erro ao criar componente." });
+  }
+});
+
+// EDITAR COMPONENTE DE NOTA
+router.put('/api/componentes/:id', authenticateToken, async (req, res) => {
+  try {
+    const componenteId = req.params.id;
+    const { nome, sigla, descricao } = req.body;
+    const userId = req.user?.id;
+
+    // Verifica se o componente pertence ao usuário
+    const [rows] = await pool.query(
+      `SELECT cn.*, d.usuario_id
+       FROM componente_nota cn
+       JOIN disciplina d ON d.id = cn.disciplina_id
+       WHERE cn.id = ?`,
+      [componenteId]
+    );
+
+    const comp = (rows as any[])[0];
+
+    if (!comp)
+      return res.status(404).json({ error: "Componente não encontrado." });
+
+    if (comp.usuario_id !== userId)
+      return res.status(403).json({ error: "Sem permissão para editar." });
+
+    await pool.query(
+      `UPDATE componente_nota
+       SET nome = ?, sigla = ?, descricao = ?
+       WHERE id = ?`,
+      [nome, sigla.toUpperCase(), descricao, componenteId]
+    );
+
+    res.json({ id: componenteId, success: true });
+  } catch (err) {
+    console.error("Erro ao editar componente:", err);
+    res.status(500).json({ error: "Erro ao editar componente." });
+  }
+});
+
+// DELETAR COMPONENTE DE NOTA
+router.delete('/api/componentes/:id', authenticateToken, async (req, res) => {
+  try {
+    const componenteId = req.params.id;
+    const userId = req.user?.id;
+
+    // Verifica permissão
+    const [rows] = await pool.query(
+      `SELECT cn.*, d.usuario_id
+       FROM componente_nota cn
+       JOIN disciplina d ON d.id = cn.disciplina_id
+       WHERE cn.id = ?`,
+      [componenteId]
+    );
+
+    const comp = (rows as any[])[0];
+
+    if (!comp)
+      return res.status(404).json({ error: "Componente não encontrado." });
+
+    if (comp.usuario_id !== userId)
+      return res.status(403).json({ error: "Sem permissão para deletar." });
+
+    await pool.query("DELETE FROM componente_nota WHERE id = ?", [componenteId]);
+
+    res.json({ id: componenteId, success: true });
+  } catch (err) {
+    console.error("Erro ao deletar componente:", err);
+    res.status(500).json({ error: "Erro ao deletar componente." });
   }
 });
 
