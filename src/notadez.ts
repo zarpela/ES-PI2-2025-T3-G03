@@ -11,6 +11,7 @@ import indexRoutes from "./index/controller.ts";     // Importa rota index
 import usuarioRoutes from "./usuario/controller.ts"; // Importa rota usuário
 import homeRoutes from "./home/controller.ts"; // Importa rota home
 import notaRoutes from "./notas/notas.routes.ts";
+import turmasRoutes from "./turmas/turmas.routes.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +28,7 @@ app.use(homeRoutes); // Usa rota home
 
 app.use("/usuario", usuarioRoutes);
 app.use("/notas", notaRoutes);
+app.use("/api/turmas", turmasRoutes);
 
 app.use('/public', express.static(path.resolve('public')));
 

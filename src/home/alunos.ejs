@@ -533,7 +533,7 @@
       const token = localStorage.getItem('token');
 
       try {
-        const res = await fetch(`/notas/turma/${turmaId}/importar-alunos-csv`, {
+        const res = await fetch(`/api/turmas/${turmaId}/import`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
           body: formData
