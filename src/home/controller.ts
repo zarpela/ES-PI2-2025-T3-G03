@@ -889,4 +889,124 @@ router.delete('/api/componentes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR NOTAS DA TURMA PARA EXPORTAÇÃO
+router.get('/api/notas/turma/:turmaId', authenticateToken, async (req, res) => {
+  try {
+    const turmaId = req.params.turmaId;
+    const userId = req.user?.id;
+
+    if (!turmaId) return res.status(400).json({ error: "turma_id é obrigatório." });
+
+    // Verifica se o usuário tem acesso à turma
+    const [turmaRows] = await pool.query(
+      `SELECT t.*, d.usuario_id 
+       FROM turma t
+       JOIN disciplina d ON d.id = t.disciplina_id
+       WHERE t.id = ?`,
+      [turmaId]
+    );
+
+    const turma = (turmaRows as any[])[0];
+    if (!turma) return res.status(404).json({ error: "Turma não encontrada." });
+    if (turma.usuario_id !== userId) return res.status(403).json({ error: "Sem permissão." });
+
+    // Busca alunos e notas
+    const [notasRows] = await pool.query(
+      `SELECT 
+        a.id as aluno_id,
+        a.identificador,
+        a.nome,
+        cn.id as componente_id,
+        cn.sigla as componente_sigla,
+        n.valor
+      FROM aluno_turma at
+      JOIN aluno a ON a.id = at.aluno_id
+      CROSS JOIN componente_nota cn
+      LEFT JOIN nota n ON n.aluno_turma_id = at.id AND n.componente_id = cn.id
+      WHERE at.turma_id = ? 
+        AND cn.disciplina_id = ?
+      ORDER BY a.nome, cn.sigla`,
+      [turmaId, turma.disciplina_id]
+    );
+
+    res.json(notasRows);
+  } catch (err) {
+    console.error("Erro ao buscar notas:", err);
+    res.status(500).json({ error: "Erro ao buscar notas." });
+  }
+});
+
+// SALVAR/ATUALIZAR NOTA
+router.post('/api/notas', authenticateToken, async (req, res) => {
+  try {
+    const { aluno_id, turma_id, componente_sigla, valor } = req.body;
+    const userId = req.user?.id;
+
+    if (!aluno_id || !turma_id || !componente_sigla || valor === undefined || valor === null || valor === '') {
+      return res.status(400).json({ error: "Campos obrigatórios faltando." });
+    }
+
+    // Verifica se o usuário tem acesso à turma
+    const [turmaRows] = await pool.query(
+      `SELECT t.*, d.usuario_id 
+       FROM turma t
+       JOIN disciplina d ON d.id = t.disciplina_id
+       WHERE t.id = ?`,
+      [turma_id]
+    );
+
+    const turma = (turmaRows as any[])[0];
+    if (!turma) return res.status(404).json({ error: "Turma não encontrada." });
+    if (turma.usuario_id !== userId) return res.status(403).json({ error: "Sem permissão." });
+
+    // Busca aluno_turma_id
+    const [alunoTurmaRows] = await pool.query(
+      `SELECT id FROM aluno_turma WHERE aluno_id = ? AND turma_id = ?`,
+      [aluno_id, turma_id]
+    );
+
+    const alunoTurma = (alunoTurmaRows as any[])[0];
+    if (!alunoTurma) return res.status(404).json({ error: "Aluno não encontrado na turma." });
+
+    // Busca componente_id pela sigla
+    const [componenteRows] = await pool.query(
+      `SELECT id FROM componente_nota WHERE sigla = ? AND disciplina_id = ?`,
+      [componente_sigla, turma.disciplina_id]
+    );
+
+    const componente = (componenteRows as any[])[0];
+    if (!componente) return res.status(404).json({ error: "Componente não encontrado." });
+
+    const valorNumerico = parseFloat(valor);
+    if (isNaN(valorNumerico) || valorNumerico < 0 || valorNumerico > 10) {
+      return res.status(400).json({ error: "Valor da nota deve estar entre 0 e 10." });
+    }
+
+    // Verifica se já existe nota
+    const [notaExistente] = await pool.query(
+      `SELECT id FROM nota WHERE aluno_turma_id = ? AND componente_id = ?`,
+      [alunoTurma.id, componente.id]
+    );
+
+    if ((notaExistente as any[]).length > 0) {
+      // Atualiza nota existente
+      await pool.query(
+        `UPDATE nota SET valor = ? WHERE aluno_turma_id = ? AND componente_id = ?`,
+        [valorNumerico, alunoTurma.id, componente.id]
+      );
+    } else {
+      // Insere nova nota
+      await pool.query(
+        `INSERT INTO nota (aluno_turma_id, componente_id, valor) VALUES (?, ?, ?)`,
+        [alunoTurma.id, componente.id, valorNumerico]
+      );
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Erro ao salvar nota:", err);
+    res.status(500).json({ error: "Erro ao salvar nota." });
+  }
+});
+
 export default router;
