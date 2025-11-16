@@ -3,8 +3,8 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto'; // Para gerar códigos aleatórios
-import transporter from '../config/mailer.ts'; // Importa o transportador de e-mail
-import { pool } from "../bd/bd.ts"; // ajuste para caminho correto do seu pool
+import transporter from '../services/mailer.service.ts'; // Importa o transportador de e-mail
+import { pool } from "../repository/bd.ts"; // ajuste para caminho correto do seu pool
 const router = express.Router();
 import bcrypt from 'bcryptjs';
 
