@@ -326,28 +326,36 @@ router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
 
 // CURSOS
 router.get('/cursos/:id', async (req, res) => {
-  const instituicaoId = req.params.id;
+  const instituicaoId = Number(req.params.id);
   const token = req.query.token as string;
+  
   if (!token) {
-    console.log('Erro: Token não fornecido');
-    return res.status(401).send('Token não fornecido. Acesso negado.');
+    return res.status(401).send('Token não fornecido');
   }
-
+  
   let userId: number;
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     userId = decoded.id;
+    console.log('Token decodificado:', { userId, instituicaoId });
   } catch (err) {
-    return res.status(403).send('Token inválido ou expirado. Acesso negado.');
+    return res.status(403).send('Token inválido ou expirado');
   }
 
   try {
+    // DEBUG: verificar valores
+    console.log('Buscando instituição:', { instituicaoId, userId });
+    
     const [institutionRows] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?',
+      'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?', 
       [instituicaoId, userId]
     );
 
+    // DEBUG: resultado da query
+    console.log('Instituição encontrada:', institutionRows);
+
     if (institutionRows.length === 0) {
+      console.log('Instituição não encontrada ou sem permissão');
       return res.status(403).send('Você não tem permissão para acessar esta instituição.');
     }
 
@@ -360,8 +368,11 @@ router.get('/cursos/:id', async (req, res) => {
       [instituicaoId, userId]
     );
 
+    console.log('Cursos encontrados:', cursoRows);
+
     res.render('cursos', { instituicao, cursos: cursoRows || [] });
   } catch (err) {
+    console.error('Erro ao buscar cursos:', err);
     res.status(500).send('Erro ao buscar cursos da instituição');
   }
 });
