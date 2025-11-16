@@ -283,7 +283,7 @@ router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
     const data = req.body;
-    await pool.query('UPDATE instituicao SET nome = ? WHERE id = ?', [data.nome, id]);
+    await pool.query('UPDATE instituicao SET nome = ?, cnpj = ? WHERE id = ?', [data.nome, data.cnpj || null, id]);
     res.json({ id });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao editar instituição.' });
@@ -386,10 +386,9 @@ router.post('/api/cursos', authenticateToken, async (req, res) => {
       return res.status(401).json({ error: 'Usuário não autenticado' });
     }
     
-    const [result] = await pool.query(
-      'INSERT INTO curso (nome, instituicao_id, usuario_id) VALUES (?, ?, ?)', 
-      [data.nome, data.instituicao_id || null, userId]
-    );
+    const [result] = await pool.query
+    ('INSERT INTO instituicao (nome, cnpj, usuario_id) VALUES (?, ?, ?)', 
+      [data.nome, data.cnpj || null, userId]);
     const insertId = (result as any).insertId;
     res.status(201).json({ 
       id: insertId, 
