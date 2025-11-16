@@ -169,13 +169,30 @@ router.put('/api/disciplinas/:id', authenticateToken, async (req, res) => {
 router.delete('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const [rows] = await pool.query('SELECT usuario_id FROM disciplina WHERE id = ?', [id]);
-    const disciplina = (rows as any[])[0];
+    const userId = req.user?.id;
+
+    const [discRows] = await pool.query(
+      'SELECT usuario_id FROM disciplina WHERE id = ?',
+      [id]
+    );
+
+    const disciplina = (discRows as any[])[0];
     if (!disciplina) return res.status(404).json({ error: 'Disciplina não encontrada' });
-    if (disciplina.usuario_id !== req.user?.id) return res.status(403).json({ error: 'Sem permissão para deletar esta disciplina.' });
-    await deleteDisciplina(id);
-    res.json({ id });
+    if (disciplina.usuario_id !== userId) return res.status(403).json({ error: 'Sem permissão' });
+
+    const [turmas] = await pool.query(
+      'SELECT COUNT(*) as total FROM turma WHERE disciplina_id = ?',
+      [id]
+    );
+
+    if ((turmas as any[])[0].total > 0) {
+      return res.status(400).json({ error: 'Não é possível deletar. Existem turmas vinculadas. Delete-as primeiro.' });
+    }
+
+    await pool.query('DELETE FROM disciplina WHERE id = ?', [id]);
+    res.json({ id, message: 'Disciplina deletada com sucesso' });
   } catch (err) {
+    console.error('Erro:', err);
     res.status(500).json({ error: 'Erro ao deletar disciplina.' });
   }
 });
@@ -317,9 +334,31 @@ router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
 router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
+    const userId = req.user?.id;
+
+    const [instRows] = await pool.query(
+      'SELECT usuario_id FROM instituicao WHERE id = ?',
+      [id]
+    );
+
+    const instituicao = (instRows as any[])[0];
+    if (!instituicao) return res.status(404).json({ error: 'Instituição não encontrada' });
+    if (instituicao.usuario_id !== userId) return res.status(403).json({ error: 'Sem permissão' });
+
+    // Verifica se tem cursos
+    const [cursos] = await pool.query(
+      'SELECT COUNT(*) as total FROM curso WHERE instituicao_id = ?',
+      [id]
+    );
+
+    if ((cursos as any[])[0].total > 0) {
+      return res.status(400).json({ error: 'Não é possível deletar. Existem cursos vinculados. Delete-os primeiro.' });
+    }
+
     await pool.query('DELETE FROM instituicao WHERE id = ?', [id]);
-    res.json({ id });
+    res.json({ id, message: 'Instituição deletada com sucesso' });
   } catch (err) {
+    console.error('Erro:', err);
     res.status(500).json({ error: 'Erro ao deletar instituição.' });
   }
 });
@@ -337,22 +376,15 @@ router.get('/cursos/:id', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     userId = decoded.id;
-    console.log('Token decodificado:', { userId, instituicaoId });
   } catch (err) {
     return res.status(403).send('Token inválido ou expirado');
   }
 
   try {
-    // DEBUG: verificar valores
-    console.log('Buscando instituição:', { instituicaoId, userId });
-    
     const [institutionRows] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM instituicao WHERE id = ? AND usuario_id = ?', 
       [instituicaoId, userId]
     );
-
-    // DEBUG: resultado da query
-    console.log('Instituição encontrada:', institutionRows);
 
     if (institutionRows.length === 0) {
       console.log('Instituição não encontrada ou sem permissão');
@@ -367,8 +399,6 @@ router.get('/cursos/:id', async (req, res) => {
        WHERE c.instituicao_id = ? AND i.usuario_id = ?`,
       [instituicaoId, userId]
     );
-
-    console.log('Cursos encontrados:', cursoRows);
 
     res.render('cursos', { instituicao, cursos: cursoRows || [] });
   } catch (err) {
@@ -476,9 +506,31 @@ router.put('/api/cursos/:id', authenticateToken, async (req, res) => {
 router.delete('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
+    const userId = req.user?.id;
+
+    const [cursoRows] = await pool.query(
+      'SELECT usuario_id FROM curso WHERE id = ?',
+      [id]
+    );
+
+    const curso = (cursoRows as any[])[0];
+    if (!curso) return res.status(404).json({ error: 'Curso não encontrado' });
+    if (curso.usuario_id !== userId) return res.status(403).json({ error: 'Sem permissão' });
+
+    // Verifica se tem disciplinas
+    const [disc] = await pool.query(
+      'SELECT COUNT(*) as total FROM disciplina WHERE curso_id = ?',
+      [id]
+    );
+
+    if ((disc as any[])[0].total > 0) {
+      return res.status(400).json({ error: 'Não é possível deletar. Existem disciplinas vinculadas. Delete-as primeiro.' });
+    }
+
     await pool.query('DELETE FROM curso WHERE id = ?', [id]);
-    res.json({ id });
+    res.json({ id, message: 'Curso deletado com sucesso' });
   } catch (err) {
+    console.error('Erro:', err);
     res.status(500).json({ error: 'Erro ao deletar curso.' });
   }
 });
@@ -612,23 +664,27 @@ router.delete('/api/turmas/:id', authenticateToken, async (req, res) => {
     const turmaId = Number(req.params.id);
     const userId = req.user?.id;
 
-    const [rows] = await pool.query(`
-      SELECT t.id
-      FROM turma t
-      JOIN disciplina d ON t.disciplina_id = d.id
-      WHERE t.id = ? AND d.usuario_id = ?
-    `, [turmaId, userId]);
+    const [turmaRows] = await pool.query(
+      `SELECT t.id, d.usuario_id
+       FROM turma t
+       JOIN disciplina d ON t.disciplina_id = d.id
+       WHERE t.id = ?`,
+      [turmaId]
+    );
 
-    if ((rows as any[]).length === 0) {
-      return res.status(404).json({ error: "Turma não encontrada ou sem permissão." });
-    }
+    const turma = (turmaRows as any[])[0];
+    if (!turma) return res.status(404).json({ error: 'Turma não encontrada' });
+    if (turma.usuario_id !== userId) return res.status(403).json({ error: 'Sem permissão' });
 
-    await pool.query("DELETE FROM turma WHERE id = ?", [turmaId]);
+    // ✅ Deleta todos os alunos vinculados PRIMEIRO
+    await pool.query('DELETE FROM aluno_turma WHERE turma_id = ?', [turmaId]);
 
-    res.json({ id: turmaId, message: "Turma deletada com sucesso." });
+    // Depois deleta a turma
+    await pool.query('DELETE FROM turma WHERE id = ?', [turmaId]);
+    res.json({ id: turmaId, message: 'Turma e todos seus alunos deletados com sucesso' });
   } catch (err) {
-    console.error("Erro ao deletar turma:", err);
-    res.status(500).json({ error: "Erro ao deletar turma." });
+    console.error('Erro:', err);
+    res.status(500).json({ error: 'Erro ao deletar turma.' });
   }
 });
 

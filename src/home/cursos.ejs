@@ -32,7 +32,7 @@
   <main class="dashboard-main pt-5">
     <div class="dashboard-title">Cursos</div>
     <div class="dashboard-desc">Gerencie seus cursos associados</div>
-    <div class="instituicoes-header">Seus Cursos</div>
+    <div class="instituicoes-header" id="headerCursos">Seus Cursos</div>
     <div class="instituicoes-wrapper" id="cardsContainer"></div>
   </main>
 
@@ -125,7 +125,17 @@
         <div class="desc">Cadastre um novo curso</div>
       `;
       card.onclick = async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const instituicaoId = urlParams.get('instituicao_id');
+        
         await loadInstituicoesSelect('instituicaoSelect');
+        
+        // ✅ PRÉ-SELECIONA E DESABILITA a instituição atual
+        if (instituicaoId) {
+          document.getElementById('instituicaoSelect').value = instituicaoId;
+          document.getElementById('instituicaoSelect').disabled = true;  // Usuário não pode mudar
+        }
+        
         addCursoModal.show();
       };
       cardsContainer.appendChild(card);
@@ -140,15 +150,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         const instituicaoId = urlParams.get('instituicao_id');
         
-        console.log('instituicao_id capturado:', instituicaoId);  // DEBUG
-        
         // Monta a URL com o instituicao_id se ele existir
         let url = '/api/cursos';
         if (instituicaoId) {
           url += `?instituicao_id=${instituicaoId}`;
         }
-        
-        console.log('Chamando URL:', url);  // DEBUG
         
         const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -157,11 +163,14 @@
         const cursos = await res.json();
 
         if (cursos.length === 0) {
-          const emptyMessage = document.createElement('div');
-          emptyMessage.className = 'text-center my-5';
-          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhum curso cadastrado</h4>`;
-          cardsContainer.appendChild(emptyMessage);
+          headerCursos.textContent = 'Nenhum curso cadastrado';
+          headerCursos.style.fontSize = '1.1rem';
         } else {
+
+           headerCursos.textContent = 'Seus Cursos';
+          headerCursos.style.fontSize = '';
+          headerCursos.style.color = '';
+
           cursos.forEach(curso => {
             const card = document.createElement('div');
             card.className = 'card-dashboard';

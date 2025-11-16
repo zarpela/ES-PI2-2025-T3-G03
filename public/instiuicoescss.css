@@ -168,3 +168,14 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
+
+.btn-success {
+  background-color: #0066cc;  /* Sua cor aqui */
+  border-color: #0066cc;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #0052a3;  /* Mais escuro ao passar mouse */
+  border-color: #0052a3;
+}
