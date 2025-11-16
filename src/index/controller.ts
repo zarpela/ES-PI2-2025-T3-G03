@@ -3,7 +3,7 @@ import express from 'express';
 const router = express.Router();
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { pool } from "../bd/bd.ts";
+import { pool } from "../repository/bd.ts";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 

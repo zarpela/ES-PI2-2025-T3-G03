@@ -1,3 +1,5 @@
+//Desenvolvido por Marcelo
+import 'reflect-metadata';
 import dotenv from 'dotenv';
 dotenv.config(); // Carrega as variáveis do arquivo .env
 
@@ -8,6 +10,7 @@ import { fileURLToPath } from 'url'
 import indexRoutes from "./index/controller.ts";     // Importa rota index
 import usuarioRoutes from "./usuario/controller.ts"; // Importa rota usuário
 import homeRoutes from "./home/controller.ts"; // Importa rota home
+import notaRoutes from "./notas/notas.routes.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +26,7 @@ app.use(usuarioRoutes); // Usa rota usuário
 app.use(homeRoutes); // Usa rota home
 
 app.use("/usuario", usuarioRoutes);
+app.use("/notas", notaRoutes);
 
 app.use('/public', express.static(path.resolve('public')));
 
