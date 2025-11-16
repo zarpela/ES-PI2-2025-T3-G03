@@ -5,7 +5,7 @@ import { NotaService } from '../services/notas.service.ts';
 // Instanciamos o serviço manualmente
 const notaService = new NotaService();
 
-export const importarCsvController = async (req: Request, res: Response) => {
+export const importarAlunosCsvController = async (req: Request, res: Response) => {
   try {
     // 1. O 'multer' coloca o arquivo no 'req.file'
     if (!req.file) {
@@ -25,7 +25,7 @@ export const importarCsvController = async (req: Request, res: Response) => {
     }
 
     // 3. Chamamos o serviço com o buffer
-    const resultado = await notaService.importarNotasDoCsv(buffer, turmaId);
+    const resultado = await notaService.importarAlunosDoCsv(buffer, turmaId);
 
     // 4. Retornamos o resultado
     return res.status(200).json(resultado);
