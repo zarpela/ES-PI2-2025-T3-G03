@@ -141,44 +141,77 @@
       cardsContainer.appendChild(card);
     }
 
-    async function captureParams() {
-      const urlParams = new URLSearchParams(window.location.search);
-      cursoId = urlParams.get('curso_id');
-      instituicaoId = urlParams.get('instituicao_id');
-      cursoNome = urlParams.get('curso_nome');
+    const originalFetch = window.fetch;
+    window.fetch = async function(...args) {
+      const token = localStorage.getItem('token');
       
-      if (cursoNome) {
-        mainTitle.textContent = cursoNome;
-        breadcrumbDisciplina.textContent = cursoNome;
-      } else if (cursoId) {
-        try {
-          const token = localStorage.getItem('token');
-          const res = await fetch(`/api/cursos/${cursoId}`, { headers: { Authorization: `Bearer ${token}` } });
-          if (res.ok) {
-            const curso = await res.json();
-            mainTitle.textContent = curso.nome;
-            breadcrumbDisciplina.textContent = curso.nome;
-          } else {
-            mainTitle.textContent = cursoId;
-            breadcrumbDisciplina.textContent = cursoId;
-          }
-        } catch {
-          mainTitle.textContent = cursoId;
-          breadcrumbDisciplina.textContent = cursoId;
+      if (token) {
+        const [resource, config = {}] = args;
+        
+        if (!config.headers) {
+          config.headers = {};
         }
-      } else {
-        mainTitle.textContent = 'Carregando...';
-        breadcrumbDisciplina.textContent = 'Carregando...';
+        
+        config.headers['Authorization'] = `Bearer ${token}`;
+        args[1] = config;
       }
       
-      // Configura o botão voltar
-      btnVoltarCursos.onclick = (e) => {
-        e.preventDefault();
-        const token = localStorage.getItem('token');
-        window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
-      };
-    }
+      return originalFetch.apply(this, args);
+    };
 
+    async function captureParams() {
+      const url = new URLSearchParams(window.location.search);
+
+      disciplinaId = url.get("disciplina_id");
+      cursoId = url.get("curso_id");
+      instituicaoId = url.get("instituicao_id");
+      cursoNome = url.get("curso_nome");  // SEM "let"
+      let disciplinaNome = url.get("disciplina_nome");
+
+      // Buscar nome do curso se não veio por parâmetro
+      if (!cursoNome && cursoId) {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`/api/cursos/${cursoId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            cursoNome = data.nome;  // atualiza a global
+          }
+        } catch {}
+      }
+
+      // Buscar nome da disciplina se não veio por parâmetro
+      if (!disciplinaNome && disciplinaId) {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(`/api/disciplinas/${disciplinaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const disciplina = await res.json();
+            disciplinaNome = disciplina.nome;
+          }
+        } catch {}
+      }
+
+      // Atualizar breadcrumb do curso com link clicável
+      const breadcrumbCurso = document.getElementById("breadcrumbDisciplina");
+      if (breadcrumbCurso) {
+        breadcrumbCurso.textContent = cursoNome || "Cursos";
+        breadcrumbCurso.style.cursor = "pointer";
+        breadcrumbCurso.onclick = (e) => {
+          e.preventDefault();
+          const token = localStorage.getItem('token');
+          window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
+        };
+
+      }
+
+      // Atualizar título principal
+      mainTitle.textContent = cursoNome || "Disciplinas";
+    }
 
     async function loadDisciplinas() {
       cardsContainer.innerHTML = '';
@@ -223,10 +256,9 @@
             const token = localStorage.getItem('token');
 
             card.querySelector('.btn-abrir').onclick = () => {
-            const token = localStorage.getItem('token');
-            window.location.href =
-              `/turmas?token=${token}&disciplina_id=${disciplina.id}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
-           };
+              const token = localStorage.getItem('token');
+              window.location.href = `/turmas?token=${token}&disciplina_id=${disciplina.id}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+            };
 
             
             card.querySelector('.btn-editar').onclick = () => {
