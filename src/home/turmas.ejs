@@ -28,10 +28,11 @@
         <span class="navbar-text me-1" style="color:#999;">></span>
 
         <!-- Disciplina Selecionada -->
-        <span id="breadcrumbDisciplinaSelecionada" class="navbar-brand mb-0 h6 fw-semibold text-muted me-1" style="letter-spacing:0.5px; cursor: pointer;">
+        <a href="#" id="breadcrumbDisciplinaSelecionada" class="navbar-brand mb-0 h6 fw-bold text-muted me-1" style="letter-spacing:0.5px; cursor: pointer;">
           -
-        </span>
+        </a>
         <span class="navbar-text me-1" style="color:#999;">></span>
+
 
         <!-- Turmas -->
         <span id="breadcrumbTurmas" class="navbar-brand mb-0 h6 fw-semibold text-muted me-1" style="color:#999;">
@@ -314,7 +315,16 @@
       }
 
       document.getElementById("btnVoltarCursos").textContent = cursoNome || "Cursos";
-      document.getElementById("breadcrumbDisciplinaSelecionada").textContent = disciplinaNome || "-";
+      const elemento = document.getElementById("breadcrumbDisciplinaSelecionada");
+      elemento.textContent = disciplinaNome || "-";
+      elemento.style.cursor = "pointer"; // para deixar visual de clicável
+
+      elemento.onclick = (e) => {
+        e.preventDefault();
+        // Lógica para navegar, ex:
+        const token = localStorage.getItem("token");
+        window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+};
     }
 
 
