@@ -1,184 +1,289 @@
-<!--Desenvolvido por Rafael Henrique dos Santos inácio-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Instituições</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="/public/homecss.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="/public/instiuicoescss.css" rel="stylesheet">
 </head>
+
 <body>
-  <!-- BARRA LATERAL -->
-  <aside id="sidebar" aria-label="Barra lateral principal">
-    <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
-    <nav>
-      <a href="/instituicoes" class="nav-link active" tabindex="0"><span class="text">Instituições</span></a>
-      <a href="/cursos" class="nav-link active" tabindex="0"><span class="text">Cursos</span></a>
-      <a href="/disciplinas" class="nav-link" tabindex="0"><span class="text">Disciplinas</span></a>
-      <a href="/turmas" class="nav-link" tabindex="0"><span class="text">Turmas</span></a>
-      <a href="#" class="nav-link" tabindex="0"><span class="text">Gerenciar Turmas</span></a>
-    </nav>
-  </aside>
+  <!-- Navbar topo fixa style V3 -->
+  <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
+    <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
 
-  <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">←</button>
+      <div>
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px;">
+          Instituições
+        </a>
+      </div>
 
-  <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
-    <h2 class="instituicao-titulo mb-4">Instituições</h2>
-    <div class="container-fluid cards row g-4" id="cardsContainer"></div>
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">
+        NotaDez
+      </span>
+
+    </div>
+  </nav>
+
+
+
+  <main class="dashboard-main pt-5">
+    <!-- Seção de instituições -->
+    <div id="institutionsSection">
+      <div class="dashboard-title">Bem-vindo, <span id="userName">Usuário</span></div>
+      <div class="dashboard-desc">Gerencie suas instituições e organize suas turmas</div>
+      <div class="instituicoes-header">Suas Instituições</div>
+      <div class="instituicoes-wrapper" id="instituicoesWrapper"></div>
+    </div>
+
+    <!-- Seção de detalhes da instituição -->
+    <div id="institutionDetails"></div>
   </main>
+
+  <!-- Modal para adicionar instituição -->
+  <div class="modal fade" id="addInstitutionModal" tabindex="-1" aria-labelledby="addInstitutionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="addInstitutionForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addInstitutionModalLabel">Cadastrar Nova Instituição</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="nomeInput" class="form-label">Nome da Instituição</label>
+            <input type="text" class="form-control" id="nomeInput" name="nome" required />
+          </div>
+          <div class="mb-3">
+            <label for="cnpjInput" class="form-label">CNPJ</label>
+            <input type="text" class="form-control" id="cnpjInput" name="cnpj" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Cadastrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para editar instituição -->
+  <div class="modal fade" id="editInstitutionModal" tabindex="-1" aria-labelledby="editInstitutionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="editInstitutionForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Instituição</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="editNomeInput" class="form-label">Nome da Instituição</label>
+            <input type="text" class="form-control" id="editNomeInput" name="nome" required />
+          </div>
+          <div class="mb-3">
+            <label for="editCnpjInput" class="form-label">CNPJ</label>
+            <input type="text" class="form-control" id="editCnpjInput" name="cnpj" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const contentArea = document.getElementById('content-area');
-    const sideLinks = document.querySelectorAll('#sidebar .nav-link');
-    const cardsContainer = document.getElementById('cardsContainer');
-
-    sideLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        sideLinks.forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    toggleSidebarBtn.addEventListener('click', () => {
-      const collapsed = sidebar.classList.toggle('collapsed');
-      if (collapsed) {
-        toggleSidebarBtn.classList.add('collapsed');
-        toggleSidebarBtn.innerHTML = '▶ Mostrar';
-        contentArea.classList.add('expanded');
-      } else {
-        toggleSidebarBtn.classList.remove('collapsed');
-        toggleSidebarBtn.innerHTML = '←';
-        contentArea.classList.remove('expanded');
-      }
-    });
-
-    // Função para renderizar cada card de instituição
-    function renderCard(card) {
-      const col = document.createElement('div');
-      col.className = 'col-sm-6 col-md-4 col-lg-3';
-
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card h-100 shadow p-3';
-      cardEl.tabIndex = 0;
-      cardEl.setAttribute('role', 'button');
-      cardEl.setAttribute('aria-pressed', 'false');
-
-      cardEl.innerHTML = `
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${card.nome}</h5>
-          <div class="card-text flex-grow-1">
-            <p><b>ID:</b> ${card.id}</p>
-            ${card.cnpj ? `<p><b>CNPJ:</b> ${card.cnpj}</p>` : ''}
-          </div>
-          <div class="d-flex gap-4 mt-auto">
-            <button class="btn btn-primary btn-open align-self-start">Abrir</button>
-            <button class="btn btn-danger btn-trash align-self-start" title="Excluir">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 23 24">
-                <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Botão abrir redireciona para /cursos
-      cardEl.querySelector('.btn-open').onclick = (e) => {
-        e.stopPropagation();
-        window.location.href = '/cursos';
-      };
-
-      // Botão excluir: usa token no header
-      cardEl.querySelector('.btn-trash').onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm('Deseja excluir esta instituição?')) {
-          const token = localStorage.getItem('token');
-          await fetch(`/api/instituicoes/${card.id}`, { 
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          loadInstituicoes();
-        }
-      };
-
-      col.appendChild(cardEl);
-      cardsContainer.appendChild(col);
-      return col;
-    }
-
-    // Card "adicionar instituição"
-    function renderAddCard() {
-      const colAdd = document.createElement('div');
-      colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
-      const cardAdd = document.createElement('div');
-      cardAdd.className = 'card h-100 shadow p-3 d-flex justify-content-center align-items-center text-center card-add-turma';
-      cardAdd.tabIndex = 0;
-      cardAdd.setAttribute('role', 'button');
-      cardAdd.setAttribute('aria-pressed', 'false');
-
-      cardAdd.innerHTML = `
-        <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-          <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
-          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Instituição</h5>
-          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova instituição.</p>
-        </div>
-      `;
-
-      cardAdd.onclick = async () => {
-        const nome = prompt('Digite o nome da nova instituição:');
-        if (!nome) return;
-        const cnpj = prompt('Digite o CNPJ da nova instituição:') || '';
+    async function loadUserName() {
+      try {
         const token = localStorage.getItem('token');
-        await fetch('/api/instituicoes', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
+        const response = await fetch('/api/usuario', {
+          headers: {
             'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ nome, cnpj })
+          }
         });
-        loadInstituicoes();
-      };
-
-      colAdd.appendChild(cardAdd);
-      cardsContainer.appendChild(colAdd);
+        if (!response.ok) throw new Error('Falha ao buscar nome do usuário');
+        const user = await response.json();
+        if (user.nome) {
+          document.getElementById('userName').innerText = user.nome;
+        }
+      } catch (err) {
+        console.error(err);
+      }
     }
 
-    // Carregar as instituições do backend usando token
+    window.addEventListener('DOMContentLoaded', () => {
+      loadUserName();
+    });
+
     async function loadInstituicoes() {
-      cardsContainer.innerHTML = '';
+      wrapper.innerHTML = '';
       try {
         const token = localStorage.getItem('token');
         const res = await fetch('/api/instituicoes', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error('Erro ao buscar instituições');
+        if (!res.ok) throw new Error();
         const instituicoes = await res.json();
-
-        if (instituicoes.length === 0) {
-          const emptyMessage = document.createElement('div');
-          emptyMessage.className = 'col-12 text-center my-5';
-          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhuma instituição cadastrada</h4>`;
-          cardsContainer.appendChild(emptyMessage);
-        } else {
-          instituicoes.forEach(renderCard);
-        }
+        
+        // Renderiza as instituições primeiro
+        instituicoes.forEach((inst) => renderInstitutionCard(inst));
+        
+        // Depois renderiza o card de adicionar por último
         renderAddCard();
-      } catch (error) {
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'col-12 text-center my-5 text-danger';
-        errorMessage.innerHTML = `<h4>Erro ao carregar instituições</h4>`;
-        cardsContainer.appendChild(errorMessage);
-        console.error(error);
+      } catch {
+        wrapper.innerHTML = `<div class="text-danger my-5">Erro ao carregar instituições</div>`;
       }
     }
 
-    // Inicializa a lista
-    loadInstituicoes();
-  </script>
+    document.addEventListener('DOMContentLoaded', loadInstituicoes);
 
+    const wrapper = document.getElementById('instituicoesWrapper');
+    const detailsContainer = document.getElementById('institutionDetails');
+    const institutionsSection = document.getElementById('institutionsSection');
+
+    function voltarParaInstituicoes() {
+      detailsContainer.classList.remove('active');
+      institutionsSection.style.display = 'block';
+      detailsContainer.innerHTML = '';
+    }
+
+    async function renderInstitutionCard(inst) {
+      const card = document.createElement('div');
+      card.className = 'card-dashboard';
+      
+      // Busca as estatísticas
+      let disciplinas = 0;
+      let turmas = 0;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/instituicoes/${inst.id}/stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const stats = await res.json();
+          disciplinas = stats.disciplinas;
+          turmas = stats.turmas;
+        }
+      } catch (err) {
+        console.error('Erro ao buscar stats:', err);
+      }
+      
+      card.innerHTML = `
+        <div class="title">${inst.nome}</div>
+        <div class="desc">${inst.cnpj ? inst.cnpj : ''}</div>
+        <div class="badges">
+          <span class="badge-custom">${disciplinas} disciplina(s)</span>
+          <span class="badge-custom">${turmas} turma(s)</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-slim btn-abrir">Abrir</button>
+          <button class="btn btn-slim btn-editar">Editar</button>
+          <button class="btn btn-slim btn-deletar">Deletar</button>
+        </div>
+      `;
+
+      card.querySelector('.btn-abrir').onclick = () => {
+        const token = localStorage.getItem('token');
+        const id = inst.id;
+        window.location.href = `/cursos/${id}?token=${token}&instituicao_id=${id}&instituicao_nome=${encodeURIComponent(inst.nome)}`;
+      };
+                                                                                                                                                                              
+      card.querySelector('.btn-editar').onclick = () => abrirModalEditarInstituicao(inst);
+      card.querySelector('.btn-deletar').onclick = async () => {
+        if (confirm(`Deseja excluir a instituição ${inst.nome}?`)) {
+          const token = localStorage.getItem('token');
+          await fetch(`/api/instituicoes/${inst.id}`, {
+            method: 'DELETE',
+            headers: {'Authorization': `Bearer ${token}`}
+          });
+          loadInstituicoes();
+        }
+      };
+      wrapper.appendChild(card);
+    }
+
+    function renderAddCard() {
+      const card = document.createElement('div');
+      card.className = 'card-add-dashboard';
+      card.innerHTML = `
+        <div class="plus">+</div>
+        <div class="title">Adicionar Instituição</div>
+        <div class="desc">Cadastre uma nova instituição</div>
+      `;
+      card.onclick = () => {
+        const modal = new bootstrap.Modal(document.getElementById('addInstitutionModal'));
+        modal.show();
+      };
+      wrapper.appendChild(card);
+    }
+    
+    document.getElementById('addInstitutionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = e.target.nome.value.trim();
+      const cnpj = e.target.cnpj.value.trim();
+      if (!nome) {
+        alert('O nome da instituição é obrigatório.');
+        return;
+      }
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/instituicoes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ nome, cnpj })
+        });
+        if (!res.ok) throw new Error('Erro ao cadastrar instituição');
+        loadInstituicoes();
+        bootstrap.Modal.getInstance(document.getElementById('addInstitutionModal')).hide();
+        e.target.reset();
+      } catch (err) {
+        alert('Erro ao cadastrar instituição. Tente novamente.');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', loadInstituicoes);
+
+    function abrirModalEditarInstituicao(instituicao) {
+      document.getElementById('editNomeInput').value = instituicao.nome || '';
+      document.getElementById('editCnpjInput').value = instituicao.cnpj || '';
+      document.getElementById('editInstitutionForm').dataset.id = instituicao.id;
+      const editModal = new bootstrap.Modal(document.getElementById('editInstitutionModal'));
+      editModal.show();
+    }
+
+    document.getElementById('editInstitutionForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const id = this.dataset.id;
+      const nome = this.nome.value.trim();
+      const cnpj = this.cnpj.value.trim();
+      if (!nome) {
+        alert('O nome da instituição é obrigatório.');
+        return;
+      }
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/instituicoes/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ nome, cnpj })
+        });
+        if (!res.ok) throw new Error('Erro ao editar instituição');
+        loadInstituicoes();
+        voltarParaInstituicoes();
+        bootstrap.Modal.getInstance(document.getElementById('editInstitutionModal')).hide();
+        this.reset();
+      } catch (err) {
+        alert('Erro ao editar instituição. Tente novamente.');
+      }
+    });
+  </script>
 </body>
 </html>

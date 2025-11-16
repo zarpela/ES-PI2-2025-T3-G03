@@ -1,190 +1,156 @@
-<!--Desenvolvido por Rafael Henrique dos Santos inácio-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cursos</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="/public/homecss.css" rel="stylesheet">
-  <style>
-    .btn-voltar {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 1000;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .btn-voltar:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="/public/instiuicoescss.css" rel="stylesheet" />
 </head>
 <body>
-  <!-- BARRA LATERAL -->
-  <aside id="sidebar" aria-label="Barra lateral principal">
-    <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
-    <nav>
-      <a href="/instituicoes" class="nav-link" tabindex="0"><span class="text">Instituições</span></a>
-      <a href="/cursos" class="nav-link active" tabindex="0"><span class="text">Cursos</span></a>
-      <a href="/disciplinas" class="nav-link" tabindex="0"><span class="text">Disciplinas</span></a>
-      <a href="/turmas" class="nav-link" tabindex="0"><span class="text">Turmas</span></a>
-      <a href="#" class="nav-link" tabindex="0"><span class="text">Gerenciar Turmas</span></a>
-    </nav>
-  </aside>
 
-  <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">←</button>
+  <!-- Navbar topo igual Instituições -->
+  <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
+    <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
+      <div>
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px;">
+          Instituições
+        </a>
+        <span class="navbar-text me-1" style="color:#999;">
+          >
+        </span>
+        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" style="letter-spacing:0.5px; cursor: default;">
+          Cursos
+        </span>
+      </div>
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">
+        NotaDez
+      </span>
+    </div>
+  </nav>
 
-  <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
-    <h2 class="instituicao-titulo mb-4">Cursos</h2>
-    <div class="container-fluid cards row g-4" id="cardsContainer"></div>
+  <main class="dashboard-main pt-5">
+    <div class="dashboard-title">Cursos</div>
+    <div class="dashboard-desc">Gerencie seus cursos associados</div>
+    <div class="instituicoes-header">Seus Cursos</div>
+    <div class="instituicoes-wrapper" id="cardsContainer"></div>
   </main>
 
-  <!-- Botão de Voltar -->
-  <button id="btnVoltar" class="btn btn-secondary btn-voltar" title="Voltar para Instituições" aria-label="Voltar para a página de Instituições">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-      <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z"/>
-    </svg>
-  </button>
+  <!-- Modal para adicionar curso -->
+  <div class="modal fade" id="addCursoModal" tabindex="-1" aria-labelledby="addCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="addCursoForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addCursoModalLabel">Cadastrar Novo Curso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="nomeCursoInput" class="form-label">Nome do Curso</label>
+            <input type="text" class="form-control" id="nomeCursoInput" name="nome" required />
+          </div>
+          <div class="mb-3">
+            <label for="instituicaoSelect" class="form-label">Instituição</label>
+            <select class="form-select" id="instituicaoSelect" name="instituicao_id" required>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Cadastrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para editar curso -->
+  <div class="modal fade" id="editCursoModal" tabindex="-1" aria-labelledby="editCursoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="editCursoForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editCursoModalLabel">Editar Curso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="editNomeCursoInput" class="form-label">Nome do Curso</label>
+            <input type="text" class="form-control" id="editNomeCursoInput" name="nome" required />
+          </div>
+          <div class="mb-3">
+            <label for="editInstituicaoSelect" class="form-label">Instituição</label>
+            <select class="form-select" id="editInstituicaoSelect" name="instituicao_id" required>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const contentArea = document.getElementById('content-area');
-    const sideLinks = document.querySelectorAll('#sidebar .nav-link');
     const cardsContainer = document.getElementById('cardsContainer');
-    const btnVoltar = document.getElementById('btnVoltar');
+    const addCursoModal = new bootstrap.Modal(document.getElementById('addCursoModal'));
+    const editCursoModal = new bootstrap.Modal(document.getElementById('editCursoModal'));
 
-    sideLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        sideLinks.forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    toggleSidebarBtn.addEventListener('click', () => {
-      const collapsed = sidebar.classList.toggle('collapsed');
-      if (collapsed) {
-        toggleSidebarBtn.classList.add('collapsed');
-        toggleSidebarBtn.innerHTML = '▶ Mostrar';
-        contentArea.classList.add('expanded');
-      } else {
-        toggleSidebarBtn.classList.remove('collapsed');
-        toggleSidebarBtn.innerHTML = '←';
-        contentArea.classList.remove('expanded');
-      }
-    });
-
-    // Botão de voltar
-    btnVoltar.addEventListener('click', () => {
-      window.location.href = '/instituicoes';
-    });
-
-    // Função para renderizar cada card de curso
-    function renderCard(card) {
-      const col = document.createElement('div');
-      col.className = 'col-sm-6 col-md-4 col-lg-3';
-
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card h-100 shadow p-3';
-      cardEl.tabIndex = 0;
-      cardEl.setAttribute('role', 'button');
-      cardEl.setAttribute('aria-pressed', 'false');
-
-      cardEl.innerHTML = `
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${card.nome}</h5>
-          <div class="card-text flex-grow-1">
-            <p><b>ID:</b> ${card.id}</p>
-          </div>
-          <div class="d-flex gap-4 mt-auto">
-            <button class="btn btn-primary btn-open align-self-start">Abrir</button>
-            <button class="btn btn-danger btn-trash align-self-start" title="Excluir">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 23 24">
-                <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Botão abrir redireciona para /disciplinas
-      cardEl.querySelector('.btn-open').onclick = (e) => {
-        e.stopPropagation();
-        window.location.href = '/disciplinas';
-      };
-
-      // Botão excluir: usa token no header
-      cardEl.querySelector('.btn-trash').onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm('Deseja excluir este curso?')) {
-          const token = localStorage.getItem('token');
-          await fetch(`/api/cursos/${card.id}`, { 
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          loadCursos();
-        }
-      };
-
-      col.appendChild(cardEl);
-      cardsContainer.appendChild(col);
-      return col;
-    }
-
-    // Card "adicionar curso"
-    function renderAddCard() {
-      const colAdd = document.createElement('div');
-      colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
-      const cardAdd = document.createElement('div');
-      cardAdd.className = 'card h-100 shadow p-3 d-flex justify-content-center align-items-center text-center card-add-turma';
-      cardAdd.tabIndex = 0;
-      cardAdd.setAttribute('role', 'button');
-      cardAdd.setAttribute('aria-pressed', 'false');
-
-      cardAdd.innerHTML = `
-        <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-          <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
-          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Curso</h5>
-          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar um novo curso.</p>
-        </div>
-      `;
-
-      cardAdd.onclick = async () => {
-        const nome = prompt('Digite o nome do novo curso:');
-        if (!nome) return;
-        const token = localStorage.getItem('token');
-        await fetch('/api/cursos', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ nome })
+    async function loadInstituicoesSelect(selectId) {
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/instituicoes', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const instituicoes = await res.json();
+        const select = document.getElementById(selectId);
+        select.innerHTML = '';
+        instituicoes.forEach(inst => {
+          const option = document.createElement('option');
+          option.value = inst.id;
+          option.textContent = inst.nome;
+          select.appendChild(option);
         });
-        loadCursos();
-      };
-
-      colAdd.appendChild(cardAdd);
-      cardsContainer.appendChild(colAdd);
+      } catch (err) {
+        console.error('Erro ao carregar instituições', err);
+      }
     }
 
-    // Carregar os cursos do backend usando token
+    function renderAddCard() {
+      const card = document.createElement('div');
+      card.className = 'card-add-dashboard';
+      card.innerHTML = `
+        <div class="plus">+</div>
+        <div class="title">Adicionar Curso</div>
+        <div class="desc">Cadastre um novo curso</div>
+      `;
+      card.onclick = async () => {
+        await loadInstituicoesSelect('instituicaoSelect');
+        addCursoModal.show();
+      };
+      cardsContainer.appendChild(card);
+    }
+
     async function loadCursos() {
       cardsContainer.innerHTML = '';
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('/api/cursos', {
+        
+        // PEGA O instituicao_id DA URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const instituicaoId = urlParams.get('instituicao_id');
+        
+        console.log('instituicao_id capturado:', instituicaoId);  // DEBUG
+        
+        // Monta a URL com o instituicao_id se ele existir
+        let url = '/api/cursos';
+        if (instituicaoId) {
+          url += `?instituicao_id=${instituicaoId}`;
+        }
+        
+        console.log('Chamando URL:', url);  // DEBUG
+        
+        const res = await fetch(url, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Erro ao buscar cursos');
@@ -192,25 +158,120 @@
 
         if (cursos.length === 0) {
           const emptyMessage = document.createElement('div');
-          emptyMessage.className = 'col-12 text-center my-5';
+          emptyMessage.className = 'text-center my-5';
           emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhum curso cadastrado</h4>`;
           cardsContainer.appendChild(emptyMessage);
         } else {
-          cursos.forEach(renderCard);
+          cursos.forEach(curso => {
+            const card = document.createElement('div');
+            card.className = 'card-dashboard';
+            card.innerHTML = `
+              <div class="title">${curso.nome}</div>
+              <div class="desc">Instituição: ${curso.instituicao_nome || 'Indefinida'}</div>
+              <div class="actions">
+                <button class="btn btn-slim btn-abrir">Abrir</button>
+                <button class="btn btn-slim btn-editar">Editar</button>
+                <button class="btn btn-slim btn-deletar">Deletar</button>
+              </div>
+            `;
+
+            card.querySelector('.btn-abrir').onclick = () => {
+              const token = localStorage.getItem('token');
+              window.location.href = `/disciplinas?token=${token}&curso_id=${curso.id}&instituicao_id=${instituicaoId}&curso_nome=${encodeURIComponent(curso.nome)}`;
+            };
+            
+            card.querySelector('.btn-editar').onclick = () => {
+              abrirModalEditarCurso(curso);
+            };
+            
+            card.querySelector('.btn-deletar').onclick = async () => {
+              if (confirm(`Deseja excluir o curso ${curso.nome}?`)) {
+                await fetch(`/api/cursos/${curso.id}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `Bearer ${token}` }
+                });
+                loadCursos();
+              }
+            };
+
+            cardsContainer.appendChild(card);
+          });
         }
         renderAddCard();
-      } catch (error) {
+      } catch(error) {
         const errorMessage = document.createElement('div');
-        errorMessage.className = 'col-12 text-center my-5 text-danger';
+        errorMessage.className = 'text-center my-5 text-danger';
         errorMessage.innerHTML = `<h4>Erro ao carregar cursos</h4>`;
         cardsContainer.appendChild(errorMessage);
         console.error(error);
       }
     }
 
-    // Inicializa a lista
-    loadCursos();
-  </script>
 
+    async function abrirModalEditarCurso(curso) {
+      await loadInstituicoesSelect('editInstituicaoSelect');
+      document.getElementById('editNomeCursoInput').value = curso.nome;
+      document.getElementById('editInstituicaoSelect').value = curso.instituicao_id || '';
+      document.getElementById('editCursoForm').dataset.id = curso.id;
+      editCursoModal.show();
+    }
+
+    window.addEventListener('DOMContentLoaded', loadCursos);
+
+    // Submissão do form de adição
+    document.getElementById('addCursoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        nome: form.nome.value.trim(),
+        instituicao_id: form.instituicao_id.value,
+      };
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/cursos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Falha ao cadastrar curso');
+        addCursoModal.hide();
+        form.reset();
+        loadCursos();
+      } catch (err) {
+        alert('Erro ao cadastrar curso. Tente novamente.');
+      }
+    });
+
+    // Submissão do form de edição
+    document.getElementById('editCursoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const id = form.dataset.id;
+      const data = {
+        nome: form.nome.value.trim(),
+        instituicao_id: form.instituicao_id.value,
+      };
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/cursos/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Falha ao editar curso');
+        editCursoModal.hide();
+        form.reset();
+        loadCursos();
+      } catch (err) {
+        alert('Erro ao editar curso. Tente novamente.');
+      }
+    });
+  </script>
 </body>
 </html>
