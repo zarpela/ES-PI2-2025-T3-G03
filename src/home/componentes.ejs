@@ -1,0 +1,197 @@
+<!--Desenvolvido por Guilherme Henrique Moreira-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Componentes de Nota</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="/public/instiuicoescss.css" rel="stylesheet"/>
+</head>
+
+<body>
+
+<!-- NAVBAR IGUAL AO PADRÃO -->
+<nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
+  <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100">
+    <div>
+      <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
+      <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+      <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Cursos</a>
+      <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+      <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
+      <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+      <span class="navbar-brand mb-0 h6 fw-semibold text-muted" id="breadcrumbComp">Componentes</span>
+    </div>
+
+    <span class="fw-light" style="color:#444; font-size:1.4rem;">NotaDez</span>
+  </div>
+</nav>
+
+<main class="dashboard-main pt-5">
+  <div class="d-flex justify-content-between align-items-center mb-3 px-3">
+    <div>
+      <div class="dashboard-title" id="discTitle">Carregando...</div>
+      <div class="dashboard-desc">Gerencie os componentes de nota desta disciplina</div>
+    </div>
+
+    <button class="btn btn-primary" id="btnNovoComponente">Novo Componente</button>
+  </div>
+
+  <div class="instituicoes-header">Componentes de Nota</div>
+
+  <div class="row g-3 px-3 mt-2" id="compList"></div>
+</main>
+
+<!-- Modal criar componente -->
+<div class="modal fade" id="compModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form class="modal-content" id="formComp">
+      <div class="modal-header">
+        <h5 class="modal-title">Novo Componente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Nome</label>
+          <input type="text" class="form-control" id="compNome" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Sigla (ex: P1)</label>
+          <input type="text" class="form-control" id="compSigla" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Descrição (opcional)</label>
+          <textarea class="form-control" id="compDescricao"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancelar</button>
+        <button class="btn btn-success" type="submit">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const compList = document.getElementById("compList");
+  const discTitle = document.getElementById("discTitle");
+
+  let disciplinaId = null;
+  let cursoId = null;
+  let instituicaoId = null;
+
+  const compModal = new bootstrap.Modal(document.getElementById("compModal"));
+
+  function getParams() {
+    const p = new URLSearchParams(window.location.search);
+    disciplinaId = p.get("disciplina_id");
+    cursoId = p.get("curso_id");
+    instituicaoId = p.get("instituicao_id");
+    discTitle.textContent = p.get("disciplina_nome") ?? "Componentes";
+  }
+
+  async function loadComponentes() {
+    compList.innerHTML = "";
+    const token = localStorage.getItem("token");
+    const res = await fetch(`/api/componentes?disciplina_id=${disciplinaId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    if (data.length === 0) {
+      compList.innerHTML = `<p class="text-muted text-center mt-3">Nenhum componente cadastrado</p>`;
+      return;
+    }
+
+    data.forEach(c => {
+      const div = document.createElement("div");
+      div.className = "col-12 col-md-6 col-lg-4";
+
+      div.innerHTML = `
+        <div class="card p-3 shadow-sm">
+          <h5 class="fw-bold">${c.sigla}</h5>
+          <p class="mb-1"><strong>Nome: </strong>${c.nome}</p>
+          <p class="text-muted small">${c.descricao || ""}</p>
+
+          <button class="btn btn-outline-primary btn-sm mt-2"
+            onclick="goAlunos()">Ver alunos / notas</button>
+        </div>`;
+
+      compList.appendChild(div);
+    });
+  }
+
+  function goAlunos() {
+    const token = localStorage.getItem("token");
+
+    window.location.href =
+      `/alunos?token=${token}&disciplina_id=${disciplinaId}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+  }
+
+  // NAVBAR links
+  document.getElementById("btnVoltarCursos").onclick = () => {
+    const token = localStorage.getItem("token");
+    window.location.href =
+      `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
+  };
+
+  document.getElementById("btnVoltarDisciplinas").onclick = () => {
+    const token = localStorage.getItem("token");
+    window.location.href =
+      `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+  };
+
+  // Abrir modal
+  document.getElementById("btnNovoComponente").onclick = () => {
+    compModal.show();
+  };
+
+  // Criar componente
+  document.getElementById("formComp").onsubmit = async (e) => {
+    e.preventDefault();
+
+    const body = {
+      nome: document.getElementById("compNome").value.trim(),
+      sigla: document.getElementById("compSigla").value.trim().toUpperCase(),
+      descricao: document.getElementById("compDescricao").value.trim(),
+      disciplina_id: disciplinaId
+    };
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("/api/componentes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (res.ok) {
+      compModal.hide();
+      await loadComponentes();
+    } else {
+      alert("Erro ao criar componente.");
+    }
+  };
+
+  window.onload = async () => {
+    getParams();
+    await loadComponentes();
+  };
+</script>
+
+</body>
+</html>

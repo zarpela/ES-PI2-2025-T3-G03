@@ -1,212 +1,294 @@
-<!--Desenvolvido por Murillo Iamarino Caravita-->
+<!--Desenvolvido por Guilherme Henrique Moreira-->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Turmas</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="/public/homecss.css" rel="stylesheet">
-  <style>
-    .btn-voltar {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 1000;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .btn-voltar:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="/public/instiuicoescss.css" rel="stylesheet" />
 </head>
 <body>
-  <!-- BARRA LATERAL -->
-  <aside id="sidebar" aria-label="Barra lateral principal">
-    <div class="sidebar-header" title="Projeto NotaDez">Projeto NotaDez</div>
-    <nav>
-      <a href="/instituicoes" class="nav-link" tabindex="0"><span class="text">Instituições</span></a>
-      <a href="/cursos" class="nav-link" tabindex="0"><span class="text">Cursos</span></a>
-      <a href="/disciplinas" class="nav-link" tabindex="0"><span class="text">Disciplinas</span></a>
-      <a href="/turmas" class="nav-link active" tabindex="0"><span class="text">Turmas</span></a>
-      <a href="#" class="nav-link" tabindex="0"><span class="text">Gerenciar Turmas</span></a>
-    </nav>
-  </aside>
 
-  <button id="toggleSidebar" aria-label="Ocultar barra lateral" title="Ocultar barra lateral">←</button>
+  <!-- NAVBAR IGUAL AO DE DISCIPLINAS -->
+  <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
+    <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
 
-  <main id="content-area" tabindex="0" role="main" aria-live="polite" aria-atomic="true">
-    <h2 class="instituicao-titulo mb-4">Turmas</h2>
-    <div class="container-fluid cards row g-4" id="cardsContainer"></div>
+      <div>
+        <!-- Instituições -->
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
+        <span class="navbar-text me-1" style="color:#999;">></span>
+
+        <!-- Cursos -->
+        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Cursos</a>
+        <span class="navbar-text me-1" style="color:#999;">></span>
+
+        <!-- Disciplinas -->
+        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
+        <span class="navbar-text me-1" style="color:#999;">></span>
+
+        <!-- Turmas (atual) -->
+        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" id="breadcrumbTurmas" style="cursor:default;">
+          Turmas
+        </span>
+      </div>
+
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">NotaDez</span>
+    </div>
+  </nav>
+
+  <main class="dashboard-main pt-5">
+    <div class="dashboard-title" id="mainTitle">Carregando...</div>
+    <div class="dashboard-desc">Gerencie as turmas da disciplina</div>
+    <div class="instituicoes-header">Suas Turmas</div>
+    <div class="instituicoes-wrapper" id="cardsContainer"></div>
   </main>
 
-  <!-- Botão de Voltar -->
-  <button id="btnVoltar" class="btn btn-secondary btn-voltar" title="Voltar para Disciplinas" aria-label="Voltar para a página de Disciplinas">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-      <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5z"/>
-    </svg>
-  </button>
+  <!-- Modal adicionar turma -->
+  <div class="modal fade" id="addTurmaModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="addTurmaForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title">Cadastrar Nova Turma</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label class="form-label">Código</label>
+            <input type="text" class="form-control" id="codigoTurmaInput" name="codigo" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Nome da Turma</label>
+            <input type="text" class="form-control" id="nomeTurmaInput" name="nome" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Apelido (opcional)</label>
+            <input type="text" class="form-control" id="apelidoTurmaInput" name="apelido" />
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Cadastrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal editar -->
+  <div class="modal fade" id="editTurmaModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="editTurmaForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title">Editar Turma</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label class="form-label">Código</label>
+            <input type="text" class="form-control" id="editCodigoTurmaInput" name="codigo" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Nome da Turma</label>
+            <input type="text" class="form-control" id="editNomeTurmaInput" name="nome" required />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Apelido (opcional)</label>
+            <input type="text" class="form-control" id="editApelidoTurmaInput" name="apelido" />
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    const contentArea = document.getElementById('content-area');
-    const sideLinks = document.querySelectorAll('#sidebar .nav-link');
-    const cardsContainer = document.getElementById('cardsContainer');
-    const btnVoltar = document.getElementById('btnVoltar');
+    const cardsContainer = document.getElementById("cardsContainer");
+    const addTurmaModal = new bootstrap.Modal(document.getElementById("addTurmaModal"));
+    const editTurmaModal = new bootstrap.Modal(document.getElementById("editTurmaModal"));
+    const mainTitle = document.getElementById("mainTitle");
 
-    sideLinks.forEach(link => {
-      link.addEventListener('click', function() {
-        sideLinks.forEach(l => l.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
+    let disciplinaId = null;
+    let cursoId = null;
+    let instituicaoId = null;
 
-    toggleSidebarBtn.addEventListener('click', () => {
-      const collapsed = sidebar.classList.toggle('collapsed');
-      if (collapsed) {
-        toggleSidebarBtn.classList.add('collapsed');
-        toggleSidebarBtn.innerHTML = '▶ Mostrar';
-        contentArea.classList.add('expanded');
-      } else {
-        toggleSidebarBtn.classList.remove('collapsed');
-        toggleSidebarBtn.innerHTML = '←';
-        contentArea.classList.remove('expanded');
-      }
-    });
-
-    // Botão de voltar
-    btnVoltar.addEventListener('click', () => {
-      window.location.href = '/disciplinas';
-    });
-
-    // Função para renderizar cada card de turma
-    function renderCard(turma) {
-      const col = document.createElement('div');
-      col.className = 'col-sm-6 col-md-4 col-lg-3';
-
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card h-100 shadow p-3';
-      cardEl.tabIndex = 0;
-      cardEl.setAttribute('role', 'button');
-      cardEl.setAttribute('aria-pressed', 'false');
-
-      cardEl.innerHTML = `
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${turma.nome}</h5>
-          <div class="card-text flex-grow-1">
-            <p><b>Código:</b> ${turma.codigo}</p>
-            ${turma.apelido ? `<p><b>Apelido:</b> ${turma.apelido}</p>` : ''}
-          </div>
-          <div class="d-flex gap-4 mt-auto">
-            <button class="btn btn-danger btn-trash align-self-start" title="Excluir">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 23 24">
-                <path d="M5 6h14v2H5zm2 2v12c0 1.104.896 2 2 2h6c1.104 0 2-.896 2-2V8H7zm3 10h2v-8h-2v8zm-2 0h2v-8h-2v8zm4 0h2v-8h-2v8zm-4.293-16.707A.99943.99943 0 007 3c0 .553.447 1 1 1h8c.553 0 1-.447 1-1a.99943.99943 0 00-.293-.707C16.125 1.496 15.573 1 15 1H9c-.573 0-1.125.496-1.293 1.293z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Botão excluir: usa token no header
-      cardEl.querySelector('.btn-trash').onclick = async (e) => {
-        e.stopPropagation();
-        if (confirm('Deseja excluir esta turma?')) {
-          const token = localStorage.getItem('token');
-          await fetch(`/api/turmas/${turma.id}`, { 
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          loadTurmas();
-        }
-      };
-
-      col.appendChild(cardEl);
-      cardsContainer.appendChild(col);
-      return col;
-    }
-
-    // Card "adicionar turma"
     function renderAddCard() {
-      const colAdd = document.createElement('div');
-      colAdd.className = 'col-sm-6 col-md-4 col-lg-3';
-      const cardAdd = document.createElement('div');
-      cardAdd.className = 'card h-100 shadow p-3 d-flex justify-content-center align-items-center text-center card-add-turma';
-      cardAdd.tabIndex = 0;
-      cardAdd.setAttribute('role', 'button');
-      cardAdd.setAttribute('aria-pressed', 'false');
-
-      cardAdd.innerHTML = `
-        <div class="d-flex flex-column justify-content-center align-items-center h-100 w-100">
-          <div style="font-size: 2.8rem; color: #4979d5; margin-bottom: 12px;">+</div>
-          <h5 class="card-title mb-3" style="font-weight:700;">Adicionar Turma</h5>
-          <p class="card-text" style="color:#4a4a4a; font-size:0.99rem;">Clique para cadastrar uma nova turma.</p>
-        </div>
+      const card = document.createElement("div");
+      card.className = "card-add-dashboard";
+      card.innerHTML = `
+        <div class="plus">+</div>
+        <div class="title">Adicionar Turma</div>
+        <div class="desc">Cadastre uma nova turma</div>
       `;
+      card.onclick = () => addTurmaModal.show();
+      cardsContainer.appendChild(card);
+    }
 
-      cardAdd.onclick = async () => {
-        const nome = prompt('Digite o nome da nova turma:');
-        if (!nome) return;
-        const codigo = prompt('Digite o código da turma:');
-        if (!codigo) return;
-        const apelido = prompt('Digite o apelido (opcional):') || '';
-        const token = localStorage.getItem('token');
-        await fetch('/api/turmas', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ nome, codigo, apelido })
-        });
-        loadTurmas();
+    function captureParams() {
+      const url = new URLSearchParams(window.location.search);
+
+      disciplinaId = url.get("disciplina_id");
+      cursoId = url.get("curso_id");
+      instituicaoId = url.get("instituicao_id");
+
+      const disciplinaNome = url.get("disciplina_nome");
+      const cursoNome = url.get("curso_nome");
+      const instituicaoNome = url.get("instituicao_nome");
+
+      mainTitle.textContent = disciplinaNome || "Turmas";
+
+      // Voltar para cursos
+      btnVoltarCursos.onclick = () => {
+        const token = localStorage.getItem("token");
+        window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
       };
 
-      colAdd.appendChild(cardAdd);
-      cardsContainer.appendChild(colAdd);
+      // Voltar para disciplinas
+      btnVoltarDisciplinas.onclick = () => {
+        const token = localStorage.getItem("token");
+        window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+      };
     }
 
-    // Carregar as turmas do backend usando token
     async function loadTurmas() {
-      cardsContainer.innerHTML = '';
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('/api/turmas', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Erro ao buscar turmas');
-        const turmas = await res.json();
+      cardsContainer.innerHTML = "";
 
-        if (turmas.length === 0) {
-          const emptyMessage = document.createElement('div');
-          emptyMessage.className = 'col-12 text-center my-5';
-          emptyMessage.innerHTML = `<h4 class="text-muted mb-3">Nenhuma turma cadastrada</h4>`;
-          cardsContainer.appendChild(emptyMessage);
-        } else {
-          turmas.forEach(renderCard);
-        }
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/turmas?disciplina_id=${disciplinaId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) return;
+
+      const turmas = await res.json();
+
+      if (turmas.length === 0) {
         renderAddCard();
-      } catch (error) {
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'col-12 text-center my-5 text-danger';
-        errorMessage.innerHTML = `<h4>Erro ao carregar turmas</h4>`;
-        cardsContainer.appendChild(errorMessage);
-        console.error(error);
+        return;
       }
+
+      turmas.forEach(turma => {
+        const card = document.createElement("div");
+        card.className = "card-dashboard";
+        card.innerHTML = `
+          <div class="title">${turma.nome} <small style="font-weight:400;">(${turma.apelido || "—"})</small></div>
+          <div class="desc">Código: ${turma.codigo}</div>
+          <div class="badges">
+            <span class="badge-custom">ID: ${turma.id}</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-slim btn-abrir">Alunos</button>
+            <button class="btn btn-slim btn-editar">Editar</button>
+            <button class="btn btn-slim btn-deletar">Deletar</button>
+          </div>
+        `;
+
+        card.querySelector(".btn-abrir").onclick = () => {
+          const token = localStorage.getItem("token");
+          window.location.href =
+            `/alunos?token=${token}&turma_id=${turma.id}&disciplina_id=${disciplinaId}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+        };
+
+        card.querySelector(".btn-editar").onclick = () => abrirModalEditar(turma);
+
+        card.querySelector(".btn-deletar").onclick = async () => {
+          if (!confirm(`Deseja excluir a turma ${turma.nome}?`)) return;
+
+          const del = await fetch(`/api/turmas/${turma.id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          if (del.ok) loadTurmas();
+        };
+
+        cardsContainer.appendChild(card);
+      });
+
+      renderAddCard();
     }
 
-    // Inicializa a lista
-    loadTurmas();
+    function abrirModalEditar(turma) {
+      editCodigoTurmaInput.value = turma.codigo;
+      editNomeTurmaInput.value = turma.nome;
+      editApelidoTurmaInput.value = turma.apelido || "";
+      editTurmaForm.dataset.id = turma.id;
+      editTurmaModal.show();
+    }
+
+    document.getElementById("addTurmaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem("token");
+
+      const data = {
+        codigo: codigoTurmaInput.value.trim(),
+        nome: nomeTurmaInput.value.trim(),
+        apelido: apelidoTurmaInput.value.trim(),
+        disciplina_id: disciplinaId
+      };
+
+      const res = await fetch("/api/turmas", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        addTurmaModal.hide();
+        loadTurmas();
+      } else {
+        alert("Erro ao cadastrar turma");
+      }
+    });
+
+    document.getElementById("editTurmaForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = e.target.dataset.id;
+      const token = localStorage.getItem("token");
+
+      const data = {
+        codigo: editCodigoTurmaInput.value.trim(),
+        nome: editNomeTurmaInput.value.trim(),
+        apelido: editApelidoTurmaInput.value.trim()
+      };
+
+      const res = await fetch(`/api/turmas/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        editTurmaModal.hide();
+        loadTurmas();
+      } else {
+        alert("Erro ao editar turma");
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      captureParams();
+      loadTurmas();
+    });
   </script>
 
 </body>

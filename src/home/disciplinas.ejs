@@ -209,8 +209,11 @@
             const token = localStorage.getItem('token');
 
             card.querySelector('.btn-abrir').onclick = () => {
-              window.location.href = `/turmas?token=${token}&disciplina_id=${disciplina.id}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
-            };
+            const token = localStorage.getItem('token');
+            window.location.href =
+              `/turmas?token=${token}&disciplina_id=${disciplina.id}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+           };
+
             
             card.querySelector('.btn-editar').onclick = () => {
               abrirModalEditarDisciplina(disciplina);

@@ -1,0 +1,311 @@
+<!--Desenvolvido por Guilherme Henrique Moreira-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alunos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="/public/instiuicoescss.css" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- NAVBAR IGUAL AO DE DISCIPLINAS/TURMAS -->
+  <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
+    <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
+      <div>
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
+        <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Cursos</a>
+        <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
+        <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" id="breadcrumbAlunos" style="cursor:default;">
+          Alunos
+        </span>
+      </div>
+
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">NotaDez</span>
+    </div>
+  </nav>
+
+  <main class="dashboard-main pt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3 px-3">
+      <div>
+        <div class="dashboard-title" id="mainTitle">Carregando...</div>
+        <div class="dashboard-desc">Gerencie os alunos e componentes de nota</div>
+      </div>
+      <div class="d-flex gap-2">
+        <label class="btn btn-outline-secondary mb-0">
+          Importar CSV <input id="csvFile" type="file" accept=".csv" hidden>
+        </label>
+        <button id="btnCriarComponente" class="btn btn-primary">Novo componente</button>
+      </div>
+    </div>
+
+    <div class="instituicoes-header">Alunos</div>
+
+    <div class="card p-3 mt-3 mx-3">
+      <div class="table-responsive">
+        <table class="table table-sm" id="notasTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: criar componente -->
+  <div class="modal fade" id="componenteModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="componenteForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title">Criar componente de nota</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Nome</label>
+            <input type="text" class="form-control" id="compNome" name="nome" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Sigla (ex: P1)</label>
+            <input type="text" class="form-control" id="compSigla" name="sigla" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descrição (opcional)</label>
+            <textarea class="form-control" id="compDescricao" name="descricao"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-success" type="submit">Salvar componente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: mensagem simples -->
+  <div class="modal fade" id="infoModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body" id="infoModalBody"></div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const tableHead = document.getElementById('tableHead');
+    const tableBody = document.getElementById('tableBody');
+    const mainTitle = document.getElementById('mainTitle');
+    const csvFile = document.getElementById('csvFile');
+    const componenteModal = new bootstrap.Modal(document.getElementById('componenteModal'));
+    const infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
+    const infoModalBody = document.getElementById('infoModalBody');
+
+    let turmaId = null;
+    let disciplinaId = null;
+    let cursoId = null;
+    let instituicaoId = null;
+    let componentes = []; // componente_nota list
+
+    function showInfo(msg) {
+      infoModalBody.textContent = msg;
+      infoModal.show();
+    }
+
+    function captureParams() {
+      const params = new URLSearchParams(window.location.search);
+      turmaId = params.get('turma_id');
+      disciplinaId = params.get('disciplina_id');
+      cursoId = params.get('curso_id');
+      instituicaoId = params.get('instituicao_id');
+      const disciplinaNome = params.get('disciplina_nome');
+      const turmaNome = params.get('turma_nome');
+
+      mainTitle.textContent = (turmaNome ? `${turmaNome}` : (disciplinaNome ? disciplinaNome : 'Alunos'));
+      // voltar links (se existir)
+      const btnVoltarCursos = document.getElementById('btnVoltarCursos');
+      const btnVoltarDisciplinas = document.getElementById('btnVoltarDisciplinas');
+      if (btnVoltarCursos) btnVoltarCursos.onclick = (e) => {
+        e?.preventDefault();
+        const token = localStorage.getItem('token');
+        window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
+      };
+      if (btnVoltarDisciplinas) btnVoltarDisciplinas.onclick = (e) => {
+        e?.preventDefault();
+        const token = localStorage.getItem('token');
+        window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+      };
+    }
+
+    // monta cabeçalho com colunas estáticas + componentes dinâmicos
+    function buildTableHeader() {
+      tableHead.innerHTML = '';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <th style="min-width:120px">Matrícula</th>
+        <th>Nome</th>
+      `;
+      componentes.forEach(c => {
+        const th = document.createElement('th');
+        th.textContent = c.sigla;
+        tr.appendChild(th);
+      });
+      tableHead.appendChild(tr);
+    }
+
+    async function loadComponentes() {
+      componentes = [];
+      if (!disciplinaId) return;
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/componentes?disciplina_id=${disciplinaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        componentes = await res.json();
+      } catch (err) {
+        console.error('Erro ao carregar componentes', err);
+      }
+    }
+
+    async function loadAlunos() {
+      tableBody.innerHTML = '';
+      if (!turmaId) {
+        showInfo('turma_id não fornecido na URL');
+        return;
+      }
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/alunos?turma_id=${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          showInfo('Erro ao carregar alunos');
+          return;
+        }
+        const alunos = await res.json();
+        if (alunos.length === 0) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="${2 + componentes.length}" class="text-center text-muted">Nenhum aluno cadastrado</td>`;
+          tableBody.appendChild(tr);
+          return;
+        }
+
+        alunos.forEach(al => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${al.identificador}</td><td>${al.nome}</td>`;
+          componentes.forEach(c => {
+            const td = document.createElement('td');
+            td.textContent = '-'; // modo visualização (nota ainda não lançada)
+            tr.appendChild(td);
+          });
+          tableBody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Erro ao carregar alunos', err);
+        showInfo('Erro ao carregar alunos');
+      }
+    }
+
+    // criar componente via modal
+    document.getElementById('btnCriarComponente').addEventListener('click', () => componenteModal.show());
+    document.getElementById('componenteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('compNome').value.trim();
+      const sigla = document.getElementById('compSigla').value.trim().toUpperCase();
+      const descricao = document.getElementById('compDescricao').value.trim();
+      if (!disciplinaId) { showInfo('disciplina_id ausente na URL'); return; }
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/componentes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ nome, sigla, descricao, disciplina_id: disciplinaId })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro');
+        componenteModal.hide();
+        // limpa form
+        document.getElementById('compNome').value = '';
+        document.getElementById('compSigla').value = '';
+        document.getElementById('compDescricao').value = '';
+        await init(); // recarrega
+        showInfo('Componente criado com sucesso');
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao criar componente: ' + (err.message || err));
+      }
+    });
+
+    // importar CSV: pega arquivo, parse simples (duas primeiras colunas)
+    csvFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      // parsing simples: quebra por linhas, separa por vírgula (não trata escapes complexos)
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      const alunos = [];
+      for (const line of lines) {
+        // tenta separar por ; ou , (tenta ambos)
+        const parts = line.includes(';') ? line.split(';') : line.split(',');
+        const identificador = (parts[0] || '').trim();
+        const nome = (parts[1] || '').trim();
+        if (!identificador || !nome) continue;
+        alunos.push({ identificador, nome });
+      }
+
+      if (alunos.length === 0) {
+        showInfo('Nenhum aluno válido encontrado no CSV (usa-se as 2 primeiras colunas)');
+        csvFile.value = '';
+        return;
+      }
+
+      if (!confirm(`Enviar ${alunos.length} alunos para a turma? (duplicatas serão ignoradas)`)) {
+        csvFile.value = '';
+        return;
+      }
+
+      // envia ao backend
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/alunos/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ turma_id: turmaId, alunos })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro na importação');
+        showInfo(`Importação concluída — inseridos: ${data.inserted || 0}, pulados: ${data.skipped || 0}`);
+        csvFile.value = '';
+        await init();
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao importar CSV: ' + (err.message || err));
+        csvFile.value = '';
+      }
+    });
+
+    // inicializa: carrega componentes e alunos e monta tabela
+    async function init() {
+      await loadComponentes();
+      buildTableHeader();
+      await loadAlunos();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      captureParams();
+      init();
+    });
+  </script>
+</body>
+</html>
