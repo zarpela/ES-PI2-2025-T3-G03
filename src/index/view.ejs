@@ -1,66 +1,78 @@
 <!-- Desenvolvido por Murillo Iamarino Caravita-->
+<!-- Comentário inicial informando o autor -->
 
 <!DOCTYPE html>
+<!-- Declara o tipo de documento (HTML5) -->
+
 <html lang="pt-BR">
+<!-- Define o idioma da página como português do Brasil -->
+
 <head>
   <meta charset="UTF-8" />
+  <!-- Define o conjunto de caracteres como UTF-8 -->
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Ajusta o layout para funcionar bem em dispositivos móveis -->
 
   <!-- Link do Bootstrap -->
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-    crossorigin="anonymous"
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" <!-- CDN do Bootstrap para
+    estilos prontos -->
+  rel="stylesheet"
+  integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+  crossorigin="anonymous"
   />
 
   <title>Login NotaDez</title>
+  <!-- Título exibido na aba do navegador -->
 
   <!-- Conectando o CSS personalizado -->
   <link rel="stylesheet" href="/public/base-cad-log.css" />
+  <!-- Importa um arquivo CSS customizado -->
 </head>
 
 <body>
   <main class="container py-5 d-flex justify-content-center align-items-center">
+    <!-- Container central com padding e centralização -->
+
     <form id="form-login" class="w-100" style="max-width: 400px;">
+      <!-- Formulário de login limitado a 400px -->
+
       <h1 class="mb-4 text-center">NotaDez Login</h1>
-      
+      <!-- Título do formulário -->
+
       <div class="mb-3">
+        <!-- Campo de email -->
         <label for="EmailLogin" class="form-label">Email</label>
-        <input
-          type="email"
-          class="form-control"
-          id="EmailLogin"
-          placeholder="Digite seu email"
-          required
+        <input type="email" class="form-control" id="EmailLogin" placeholder="Digite seu email" required <!-- Campo
+          obrigatório -->
         />
       </div>
 
       <div class="mb-3">
+        <!-- Campo de senha -->
         <label for="SenhasLogin" class="form-label">Senha</label>
-        <input
-          type="password"
-          class="form-control"
-          id="SenhasLogin"
-          placeholder="Digite sua senha"
-          required
-        />
+        <input type="password" class="form-control" id="SenhasLogin" placeholder="Digite sua senha" required />
       </div>
 
       <div class="mb-3 form-check d-flex justify-content-between align-items-center">
+        <!-- Linha com checkbox de lembrar senha e link de recuperação -->
+
         <div>
           <input type="checkbox" class="form-check-input" id="lembreSenha" />
           <label class="form-check-label" for="lembreSenha">Lembrar a senha</label>
         </div>
+
         <a href="/usuario/recuperar-senha" class="small">Esqueci minha senha</a>
+        <!-- Link para recuperar senha -->
       </div>
 
       <button type="submit" id="EntrarLogin" class="btn btn-primary w-100 mb-3">
+        <!-- Botão de envio -->
         Entrar
       </button>
 
-
       <div class="text-center">
+        <!-- Área com link para cadastro -->
         <p class="mb-0">
           Não tem uma conta?
           <a href="/usuario/cadastrar">Cadastre-se</a>
@@ -68,46 +80,69 @@
       </div>
     </form>
   </main>
+
   <script>
-        document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('form-login');
-        const emailInput = document.getElementById('EmailLogin');
-        const senhaInput = document.getElementById('SenhasLogin');
+    document.addEventListener('DOMContentLoaded', () => {
+      // Espera o DOM carregar para evitar problemas ao acessar elementos
 
-        form.addEventListener('submit', async (e) => {
-          e.preventDefault();
+      const form = document.getElementById('form-login');
+      // Seleciona o formulário
 
-          const data = {
-            email: emailInput.value,
-            senha: senhaInput.value
-          };
+      const emailInput = document.getElementById('EmailLogin');
+      // Campo de email
 
-          try {
-            const response = await fetch('/', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            });
+      const senhaInput = document.getElementById('SenhasLogin');
+      // Campo de senha
 
-            const result = await response.json();
+      // Manipula o evento de submissão do formulário
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        // Impede o envio tradicional do formulário
 
-            if (response.ok) {
-              // Armazena o token JWT no localStorage
-              localStorage.setItem('token', result.token);
-              alert(result.message);
-              // Redireciona para a página de turmas
-              window.location.href = '/instituicoes';
-            } else {
-              // Mostra mensagem de erro do backend
-              alert(result.message);
-            }
-          } catch (err) {
-            //console.error(err);
-            alert('Erro ao fazer login. Tente novamente mais tarde.');
+        const data = {
+          email: emailInput.value,
+          senha: senhaInput.value
+        };
+        // Objeto com os dados enviados ao backend
+
+        try {
+          const response = await fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+            // Envia o JSON para o backend no endpoint "/"
+          });
+
+          const result = await response.json();
+          // Converte a resposta para JSON
+
+          if (response.ok) {
+            // Se o backend retornou status 200–299
+
+            // Armazena o token JWT no localStorage
+            localStorage.setItem('token', result.token);
+
+            alert(result.message);
+            // Mensagem do backend
+
+            // Redireciona para a página de instituições
+            window.location.href = '/instituicoes';
+          } else {
+            // Caso de erro do backend
+            alert(result.message);
           }
-        });
+        } catch (err) {
+          //console.error(err);
+          // Em caso de falha total na requisição
+
+          alert('Erro ao fazer login. Tente novamente mais tarde.');
+        }
       });
+    });
   </script>
 
 </body>
+<!-- Fim do body -->
+
 </html>
+<!-- Fim do documento HTML -->

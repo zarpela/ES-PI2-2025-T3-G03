@@ -1,130 +1,142 @@
 <!-- Desenvolvido por Marcelo e complementado por Murillo -->
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html> <!-- Declara o documento como HTML5 -->
+<html lang="pt-BR"> <!-- Define o idioma da página -->
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" /> <!-- Codificação UTF-8 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- Responsividade mobile -->
 
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-    crossorigin="anonymous"
-  />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+  <!-- Importa Bootstrap 5 via CDN -->
 
-  <title>Recuperar Senha - NotaDez</title>
+  <title>Recuperar Senha - NotaDez</title> <!-- Título exibido na aba -->
 
-  <link rel="stylesheet" href="/public/base-cad-log.css" />
+  <link rel="stylesheet" href="/public/base-cad-log.css" /> <!-- CSS próprio do projeto -->
 </head>
 
 <body>
   <main class="container py-5 d-flex justify-content-center align-items-center">
-    <form class="w-100" style="max-width: 400px;" id="form-recuperar">
-      <h1 class="mb-4 text-center">Recuperar Senha</h1>
-      
-      <div class="mb-3" id="email-group">
-        <label for="email-recuperar" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email-recuperar" placeholder="Digite o email cadastrado" required/>
+    <!-- Centraliza conteúdo vertical e horizontalmente -->
+    <form class="w-100" style="max-width: 400px;" id="form-recuperar"> <!-- Formulário limitado a 400px -->
+      <h1 class="mb-4 text-center">Recuperar Senha</h1> <!-- Título -->
+
+      <div class="mb-3" id="email-group"> <!-- Grupo do campo de e-mail -->
+        <label for="email-recuperar" class="form-label">Email</label> <!-- Rótulo -->
+        <input type="email" class="form-control" id="email-recuperar" placeholder="Digite o email cadastrado"
+          required /> <!-- Input obrigatório -->
       </div>
 
       <p id="mensagem-codigo" class="text-center text-success d-none">Um código foi enviado para seu e-mail.</p>
+      <!-- Mensagem escondida inicialmente -->
 
-      <div class="mb-4 d-none" id="codigo-group">
+      <div class="mb-4 d-none" id="codigo-group"> <!-- Grupo do campo de código, inicialmente escondido -->
         <label for="codigo-verificacao" class="form-label">Código de Verificação</label>
-        <input type="text" class="form-control" id="codigo-verificacao" placeholder="Digite o código recebido"/>
+        <input type="text" class="form-control" id="codigo-verificacao" placeholder="Digite o código recebido" />
+        <!-- Input do código -->
       </div>
 
-      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a href="/" type="button" class="btn btn-light mb-3">Voltar</a>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end"> <!-- Div com os botões alinhados -->
+        <a href="/" type="button" class="btn btn-light mb-3">Voltar</a> <!-- Botão de voltar -->
         <button type="submit" id="btn-enviar-email" class="btn btn-primary mb-3">Enviar</button>
+        <!-- Botão da 1ª etapa -->
         <button type="submit" id="btn-verificar-codigo" class="btn btn-primary mb-3 d-none">Verificar Código</button>
+        <!-- Botão da 2ª etapa -->
       </div>
     </form>
   </main>
 
   <script>
     // Seleciona os elementos do formulário
-    const form = document.getElementById('form-recuperar');
-    const emailInput = document.getElementById('email-recuperar');
-    const codigoGroup = document.getElementById('codigo-group');
-    const codigoInput = document.getElementById('codigo-verificacao');
-    const mensagemCodigo = document.getElementById('mensagem-codigo');
-    const btnEnviarEmail = document.getElementById('btn-enviar-email');
-    const btnVerificarCodigo = document.getElementById('btn-verificar-codigo');
-    const alertContainer = document.createElement('div'); // Container para alertas
-    form.prepend(alertContainer);
+    const form = document.getElementById('form-recuperar'); // Formulário
+    const emailInput = document.getElementById('email-recuperar'); // Campo de email
+    const codigoGroup = document.getElementById('codigo-group'); // Div do campo de código
+    const codigoInput = document.getElementById('codigo-verificacao'); // Input do código
+    const mensagemCodigo = document.getElementById('mensagem-codigo'); // Mensagem após envio
+    const btnEnviarEmail = document.getElementById('btn-enviar-email'); // Botão de enviar email
+    const btnVerificarCodigo = document.getElementById('btn-verificar-codigo'); // Botão de verificar código
+    const alertContainer = document.createElement('div'); // Cria um container para mensagens de alerta dinamicamente
+    form.prepend(alertContainer); // Insere o container no topo do formulário
 
     // Função para exibir alertas
-    function showAlert(message, type = 'danger') {
-        alertContainer.innerHTML = `
+    function showAlert(message, type = 'danger') { // type aceita 'danger', 'success', etc.
+      alertContainer.innerHTML = `
             <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                ${message} <!-- Mensagem exibida -->
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> <!-- Botão de fechar alerta -->
             </div>
         `;
     }
 
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
-        alertContainer.innerHTML = ''; // Limpa alertas antigos
+    // Manipulador de envio do formulário
+    form.addEventListener('submit', async function (event) {
+      event.preventDefault(); // Impede o reload padrão do formulário
+      alertContainer.innerHTML = ''; // Limpa alertas anteriores
 
-        if (!btnEnviarEmail.classList.contains('d-none')) {
-            // --- Etapa 1: Enviar o Email ---
-            try {
-                const response = await fetch('/usuario/recuperar-senha', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: emailInput.value })
-                });
+      // Verifica se ainda estamos na etapa de enviar o email
+      if (!btnEnviarEmail.classList.contains('d-none')) {
+        // --- Etapa 1: Enviar o Email ---
+        try {
+          const response = await fetch('/usuario/recuperar-senha', { // Envia requisição ao backend
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, // JSON
+            body: JSON.stringify({ email: emailInput.value }) // Dados enviados
+          });
 
-                const data = await response.json();
+          const data = await response.json(); // Converte resposta em JSON
 
-                if (!response.ok) {
-                    throw new Error(data.message || 'Erro ao solicitar recuperação de senha.');
-                }
+          if (!response.ok) { // Se retorno for erro
+            throw new Error(data.message || 'Erro ao solicitar recuperação de senha.');
+          }
 
-                // Atualiza a interface
-                emailInput.disabled = true;
-                btnEnviarEmail.classList.add('d-none');
-                mensagemCodigo.textContent = data.message; // Usa a mensagem do backend
-                mensagemCodigo.classList.remove('d-none');
-                codigoGroup.classList.remove('d-none');
-                btnVerificarCodigo.classList.remove('d-none');
-                codigoInput.required = true;
+          // Atualiza a interface para a etapa do código
+          emailInput.disabled = true; // Impede editar o e-mail
+          btnEnviarEmail.classList.add('d-none'); // Esconde botão inicial
+          mensagemCodigo.textContent = data.message; // Exibe mensagem do backend
+          mensagemCodigo.classList.remove('d-none'); // Torna visível
+          codigoGroup.classList.remove('d-none'); // Mostra campo de código
+          btnVerificarCodigo.classList.remove('d-none'); // Mostra botão de "verificar"
+          codigoInput.required = true; // Torna o campo obrigatório
 
-            } catch (error) {
-                showAlert(error.message);
-            }
-
-        } else {
-            // --- Etapa 2: Verificar o Código ---
-            try {
-                const response = await fetch('/usuario/verificar-codigo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: emailInput.value,
-                        code: codigoInput.value
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Erro ao verificar o código.');
-                }
-                
-                // Sucesso!
-                showAlert(data.message, 'success');
-                // Opcional: redirecionar para a página de redefinição de senha
-                // window.location.href = '/usuario/redefinir-senha?token=...';
-
-            } catch (error) {
-                showAlert(error.message);
-            }
+        } catch (error) {
+          showAlert(error.message); // Exibe erro
         }
+
+      } else {
+        // --- Etapa 2: Verificar o Código ---
+        try {
+          const response = await fetch('/usuario/verificar-codigo', { // Envia código para validação
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: emailInput.value, // Email usado na etapa 1
+              code: codigoInput.value   // Código digitado
+            })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) { // Se backend retornar erro
+            throw new Error(data.message || 'Erro ao verificar o código.');
+          }
+
+          // Sucesso: exibe mensagem e redireciona
+          showAlert(data.message, 'success');
+
+          // Se o backend gerar o resetToken para nova senha:
+          if (data.resetToken) {
+            setTimeout(() => {
+              window.location.href = `/usuario/redefinir-senha?token=${data.resetToken}`; // Redireciona
+            }, 1200); // Atraso para o alerta ser lido
+          }
+
+        } catch (error) {
+          showAlert(error.message); // Exibe erro
+        }
+      }
     });
   </script>
 </body>
+
 </html>

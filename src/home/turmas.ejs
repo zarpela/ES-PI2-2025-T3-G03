@@ -28,14 +28,14 @@
         <span class="navbar-text me-1" style="color:#999;">></span>
 
         <!-- Disciplina Selecionada -->
-        <a href="#" id="breadcrumbDisciplinaSelecionada" class="navbar-brand mb-0 h6 fw-bold text-muted me-1" style="letter-spacing:0.5px; cursor: pointer;">
+        <a href="#" id="breadcrumbDisciplinaSelecionada" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px; cursor:pointer;">
           -
         </a>
         <span class="navbar-text me-1" style="color:#999;">></span>
 
 
         <!-- Turmas -->
-        <span id="breadcrumbTurmas" class="navbar-brand mb-0 h6 fw-semibold text-muted me-1" style="color:#999;">
+        <span id="breadcrumbTurmas" class="navbar-brand mb-0 h6 fw-bold text-muted me-1" style="color:#999;">
           Turmas
         </span>
       </div>
@@ -216,6 +216,7 @@
       };
     }
 
+    // Atualiza o breadcrumb da disciplina selecionada na navbar
     async function atualizarBreadcrumbDisciplina() {
       const url = new URLSearchParams(window.location.search);
       let disciplinaNome = url.get("disciplina_nome");
@@ -239,8 +240,7 @@
       document.getElementById('breadcrumbDisciplinaSelecionada').textContent = disciplinaNome || "-";
     }
 
-
-
+    // Carrega a fórmula de nota final e gerencia sua exibição
     async function loadFormula() {
       if (!disciplinaId) return;
       
@@ -280,6 +280,7 @@
       }
     }
 
+    // Salva a fórmula de nota final
     async function salvarFormula() {
       if (!disciplinaId) return;
       
@@ -317,6 +318,7 @@
       }
     }
 
+    // Carrega as turmas do usuário e renderiza os cards
     async function loadTurmas() {
       cardsContainer.innerHTML = "";
 
@@ -376,6 +378,7 @@
       renderAddCard();
     }
 
+    // Atualiza o breadcrumb da disciplina selecionada na navbar
     async function atualizarBreadcrumbs() {
       const url = new URLSearchParams(window.location.search);
 
@@ -409,17 +412,16 @@
       document.getElementById("btnVoltarCursos").textContent = cursoNome || "Cursos";
       const elemento = document.getElementById("breadcrumbDisciplinaSelecionada");
       elemento.textContent = disciplinaNome || "-";
-      elemento.style.cursor = "pointer"; // para deixar visual de clicável
 
       elemento.onclick = (e) => {
         e.preventDefault();
         // Lógica para navegar, ex:
         const token = localStorage.getItem("token");
         window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
-};
+      };
     }
 
-
+    // Abre o modal de edição com os dados preenchidos
     function abrirModalEditar(turma) {
       editCodigoTurmaInput.value = turma.codigo;
       editNomeTurmaInput.value = turma.nome;

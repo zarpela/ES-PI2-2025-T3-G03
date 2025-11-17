@@ -179,3 +179,58 @@ body {
   background-color: #0052a3;  /* Mais escuro ao passar mouse */
   border-color: #0052a3;
 }
+
+#breadcrumbDisciplinaSelecionada {
+  color: #0d6efd !important;
+}
+
+#auditoriaPanel {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+#auditoriaPanel.hide {
+  animation: slideOutRight 0.3s ease-out;
+}
+
+@keyframes slideOutRight {
+ from {
+   opacity: 1;
+   transform: translateX(0);
+  }
+  to {
+   opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* REMOVER SETAS DO INPUT NUMBER */
+/* Chrome, Safari, Edge, Opera */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Aumentar altura e espaçamento dos inputs de nota */
+.nota-input {
+  padding: 2px 1px !important;   /* Mais espaço interno */
+  height: 38px !important;       /* Altura maior */
+  font-size: 14px;
+  line-height: 1px;
+}

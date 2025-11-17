@@ -1,122 +1,196 @@
-<!--Desenvolvido por Guilherme Henrique Moreira-->
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!--Desenvolvido por Guilherme Henrique Moreira--> <!-- Comentário informativo sobre o autor -->
+<!DOCTYPE html> <!-- Declaração do tipo de documento HTML5 -->
+<html lang="pt-BR"> <!-- Início do HTML, definindo idioma como português do Brasil -->
+
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8" /> <!-- Define a codificação de caracteres como UTF-8 -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Alunos</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-  <link href="/public/instiuicoescss.css" rel="stylesheet" />
+  <!-- Responsividade para dispositivos móveis -->
+  <title>Alunos</title> <!-- Título da página exibido na aba do navegador -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Importa Bootstrap -->
+  <link href="/public/instiuicoescss.css" rel="stylesheet" /> <!-- Importa arquivo CSS customizado -->
 </head>
-<body>
 
-  <!-- NAVBAR IGUAL AO DE DISCIPLINAS/TURMAS -->
+<body> <!-- Início do corpo da página -->
+
+  <!-- NAVBAR PADRÃO -->
   <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
-    <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
-      <div>
-        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
+    <!-- Barra superior fixa com sombra -->
+    <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100"
+      style="padding-left:64px; padding-right:64px;"> <!-- Container da navbar com espaçamento -->
+      <div> <!-- Agrupamento dos breadcrumbs -->
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px;">
+          <!-- Link para instituições -->
+          Instituições
+        </a>
+        <span class="navbar-text me-1" style="color:#999;"> &gt; </span> <!-- Separador visual -->
+
+        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">
+          <!-- Link voltar para cursos -->
+          Cursos
+        </a>
         <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
-        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Cursos</a>
+        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1"
+          style="cursor:pointer;"> <!-- Link voltar para disciplinas -->
+          Disciplinas
+        </a>
         <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
-        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
+        <a href="#" id="btnVoltarTurmas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">
+          <!-- Link voltar para turmas -->
+          Turmas
+        </a>
         <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
-        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" id="breadcrumbAlunos" style="cursor:default;">
+        <span id="breadcrumbAlunos" class="navbar-brand mb-0 h6 fw-bold text-muted me-3" style="cursor:default;">
+          <!-- Breadcrumb atual -->
           Alunos
         </span>
       </div>
 
-      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">NotaDez</span>
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;"> <!-- Nome do sistema -->
+        NotaDez
+      </span>
     </div>
   </nav>
 
-  <main class="dashboard-main pt-5">
+  <main class="dashboard-main pt-5"> <!-- Conteúdo principal com padding no topo -->
 
-    <div class="d-flex justify-content-center mb-3 px-3">
+    <div class="d-flex justify-content-center mb-3 px-3"> <!-- Título centralizado -->
       <div class="text-center">
-        <div class="dashboard-title" id="mainTitle">Carregando...</div>
-        <div class="dashboard-desc">Gerencie os alunos e componentes de nota</div>
+        <div class="dashboard-title" id="mainTitle">Carregando...</div> <!-- Título carregado dinamicamente -->
+        <div class="dashboard-desc">Gerencie os alunos e componentes de nota</div> <!-- Subtítulo -->
       </div>
     </div>
 
-    <div class="instituicoes-header text-center">Alunos</div>
+    <div class="instituicoes-header text-center">Alunos</div> <!-- Cabeçalho da seção -->
 
-    <div class="card p-3 mt-3 mx-3">
-      <div class="table-responsive">
-        <table class="table table-sm" id="notasTable">
-          <thead id="tableHead"></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+    <!-- Botões Adicionar e Remover aluno -->
+    <div class="d-flex justify-content-start gap-2 mt-3 px-3"> <!-- Linha com botões -->
+      <button id="btnAdicionarAluno" class="btn btn-primary">Adicionar Aluno</button> <!-- Botão adicionar -->
+      <button id="btnRemoverAluno" class="btn btn-danger">Remover Aluno</button> <!-- Botão remover -->
+    </div>
+
+    <div class="card p-3 mt-3 mx-0"> <!-- Card principal -->
+
+      <!-- Contêiner flex para tabela e painel de auditoria lado a lado -->
+      <div class="d-flex gap-3 mt-3 mx-3"> <!-- Layout horizontal -->
+        <!-- Tabela de notas -->
+        <div class="card p-3 flex-grow-1"> <!-- Card expandido ocupando o máximo de espaço -->
+          <div class="table-responsive"> <!-- Área rolável -->
+            <table class="table table-sm" id="notasTable"> <!-- Tabela de notas -->
+              <thead id="tableHead"></thead> <!-- Cabeçalho gerado por JS -->
+              <tbody id="tableBody"></tbody> <!-- Corpo gerado por JS -->
+            </table>
+          </div>
+        </div>
+
+        <!-- Painel de auditoria recolhível (Sidebar) -->
+        <div id="auditoriaPanel" class="card p-3"
+          style="width: 350px; max-height: 600px; overflow-y: auto; display: none; position: relative;">
+          <!-- Painel lateral escondido -->
+          <div class="d-flex justify-content-between align-items-center mb-3"> <!-- Cabeçalho do painel -->
+            <h6 class="mb-0 fw-bold">Auditoria</h6> <!-- Título -->
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleAuditoria()"
+              style="padding: 0.25rem 0.5rem;"> <!-- Botão fechar -->
+              <span>✕</span>
+            </button>
+          </div>
+          <div id="auditoriaContent" class="small"> <!-- Conteúdo dinâmico -->
+            <p class="text-muted text-center">Carregando...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão para mostrar/ocultar painel de auditoria -->
+      <div class="d-flex justify-content-end mt-2 px-3"> <!-- Botão alinhado à direita -->
+        <button id="btnToggleAuditoria" class="btn btn-sm btn-outline-primary" onclick="toggleAuditoria()">
+          <!-- Botão abrir painel -->
+          Mostrar Auditoria
+        </button>
       </div>
     </div>
 
     <!-- === CONTROLES ABAIXO DA TABELA === -->
     <div class="d-flex justify-content-between align-items-center mt-3 px-3">
+      <!-- Container dos controles abaixo da tabela -->
       <!-- ComboBox à esquerda -->
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2"> <!-- Linha com selects lado a lado -->
         <select id="modoEdicao" class="form-select w-auto" onchange="alternarModoEdicao()">
-          <!-- 🔥 MODO EXIBIÇÃO ADICIONADO AQUI -->
-          <option value="exibicao" selected>Exibição</option>
-          <option value="componente">Editar por componente</option>
-          <option value="total">Edição Completa</option>
+          <!-- Select para escolher modo de edição -->
+          <!-- MODO EXIBIÇÃO ADICIONADO AQUI -->
+          <option value="exibicao" selected>Exibição</option> <!-- Modo somente leitura -->
+          <option value="componente">Editar por componente</option> <!-- Modo de edição por coluna específica -->
+          <option value="total">Edição Completa</option> <!-- Modo que libera todas as notas -->
         </select>
 
         <select id="componenteSelecionado" class="form-select w-auto" onchange="habilitarSomenteUmComponente()">
+          <!-- Select dinâmico de componentes -->
           <!-- preenchido automaticamente -->
         </select>
       </div>
 
       <!-- Botões à direita -->
-      <div class="d-flex flex-column gap-2">
-        <div class="d-flex gap-2">
-          <label class="btn btn-outline-secondary mb-0">
-            Importar CSV <input id="csvFile" type="file" accept=".csv" hidden>
+      <div class="d-flex flex-column gap-2"> <!-- Contêiner vertical de botões -->
+        <div class="d-flex gap-2 flex-wrap"> <!-- Primeira linha: import/export -->
+          <label class="btn btn-outline-secondary mb-0"> <!-- Botão estilizado para importar CSV -->
+            Importar CSV <input id="csvFile" type="file" accept=".csv" hidden> <!-- Input oculto -->
           </label>
           <button id="btnExportarCsv" class="btn btn-outline-success mb-0">Exportar CSV</button>
+          <!-- Botão exportar CSV -->
+
+          <label class="btn btn-outline-secondary mb-0"> <!-- Botão estilizado para importar JSON -->
+            Importar JSON <input id="jsonFile" type="file" accept=".json" hidden> <!-- Input oculto -->
+          </label>
+          <button id="btnExportarJson" class="btn btn-outline-success mb-0">Exportar JSON</button>
+          <!-- Botão exportar JSON -->
         </div>
-        <div class="d-flex gap-2">
+
+        <div class="d-flex gap-2"> <!-- Segunda linha: criar/remover componentes -->
           <button id="btnCriarComponente" class="btn btn-primary">Novo componente</button>
+          <!-- Abre modal para criar componente -->
           <button id="btnRemoverComponente" class="btn btn-danger">Remover componente</button>
+          <!-- Abre modal para remover componente -->
         </div>
       </div>
     </div>
     <!-- =================================== -->
-  </main>
+  </main> <!-- Final da tag <main> -->
 
   <!-- Modal: criar componente -->
-  <div class="modal fade" id="componenteModal" tabindex="-1">
-    <div class="modal-dialog">
-      <form id="componenteForm" class="modal-content" autocomplete="off">
-        <div class="modal-header">
+  <div class="modal fade" id="componenteModal" tabindex="-1"> <!-- Modal bootstrap invisível por padrão -->
+    <div class="modal-dialog"> <!-- Container do modal -->
+      <form id="componenteForm" class="modal-content" autocomplete="off"> <!-- Form de criação do componente -->
+        <div class="modal-header"> <!-- Cabeçalho do modal -->
           <h5 class="modal-title">Criar componente de nota</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button> <!-- Botão fechar -->
         </div>
-        <div class="modal-body">
+        <div class="modal-body"> <!-- Conteúdo principal -->
           <div class="mb-3">
-            <label class="form-label">Nome</label>
+            <label class="form-label">Nome</label> <!-- Campo: nome -->
             <input type="text" class="form-control" id="compNome" name="nome" required>
           </div>
           <div class="mb-3">
-            <label class="form-label">Sigla (ex: P1)</label>
+            <label class="form-label">Sigla (ex: P1)</label> <!-- Campo: sigla -->
             <input type="text" class="form-control" id="compSigla" name="sigla" required>
           </div>
           <div class="mb-3">
-            <label class="form-label">Descrição (opcional)</label>
+            <label class="form-label">Descrição (opcional)</label> <!-- Campo: descrição -->
             <textarea class="form-control" id="compDescricao" name="descricao"></textarea>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer"> <!-- Rodapé do modal -->
           <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-success" type="submit">Salvar componente</button>
+          <button class="btn btn-success" type="submit">Salvar componente</button> <!-- Botão de envio -->
         </div>
       </form>
     </div>
   </div>
 
   <!-- Modal: remover componente -->
-  <div class="modal fade" id="removerComponenteModal" tabindex="-1">
+  <div class="modal fade" id="removerComponenteModal" tabindex="-1"> <!-- Modal para remover -->
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -126,132 +200,355 @@
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Selecione o componente a ser removido</label>
-            <select class="form-select" id="componenteRemoverSelect">
+            <select class="form-select" id="componenteRemoverSelect"> <!-- Select carregado via JS -->
               <option value="">Selecione um componente...</option>
               <!-- preenchido automaticamente -->
             </select>
           </div>
-          <div class="alert alert-warning">
-            <strong>Atenção:</strong> Esta ação não pode ser desfeita. Todas as notas relacionadas a este componente serão removidas.
+          <div class="alert alert-warning"> <!-- Aviso de irreversibilidade -->
+            <strong>Atenção:</strong> Esta ação não pode ser desfeita. Todas as notas relacionadas a este componente
+            serão removidas.
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
           <button class="btn btn-danger" type="button" id="btnConfirmarRemocao">Remover componente</button>
+          <!-- Ação de remoção -->
         </div>
       </div>
     </div>
   </div>
 
   <!-- Modal: mensagem simples -->
-  <div class="modal fade" id="infoModal" tabindex="-1">
-    <div class="modal-dialog modal-sm">
+  <div class="modal fade" id="infoModal" tabindex="-1"> <!-- Modal genérico de info -->
+    <div class="modal-dialog modal-sm"> <!-- Modal pequeno -->
       <div class="modal-content">
-        <div class="modal-body" id="infoModalBody"></div>
+        <div class="modal-body" id="infoModalBody"></div> <!-- Conteúdo dinâmico -->
         <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button> <!-- Botão fechar -->
         </div>
       </div>
     </div>
   </div>
 
+
+  <!-- Modal: Adicionar Aluno -->
+  <div class="modal fade" id="adicionarAlunoModal" tabindex="-1"> <!-- Modal para adicionar um aluno -->
+    <div class="modal-dialog"> <!-- Container central do modal -->
+      <form id="adicionarAlunoForm" class="modal-content" autocomplete="off"> <!-- Formulário com campos do aluno -->
+        <div class="modal-header"> <!-- Cabeçalho do modal -->
+          <h5 class="modal-title">Adicionar Aluno</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button> <!-- Botão fechar -->
+        </div>
+        <div class="modal-body"> <!-- Corpo com os inputs -->
+          <div class="mb-3">
+            <label class="form-label">Matrícula</label> <!-- Campo de matrícula -->
+            <input type="text" class="form-control" id="alunoMatricula" name="identificador" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nome do Aluno</label> <!-- Campo do nome -->
+            <input type="text" class="form-control" id="alunoNome" name="nome" required>
+          </div>
+        </div>
+        <div class="modal-footer"> <!-- Rodapé com botões -->
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-success" type="submit">Adicionar</button> <!-- Envia os dados -->
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Remover Aluno -->
+  <div class="modal fade" id="removerAlunoModal" tabindex="-1"> <!-- Modal para remover aluno -->
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"> <!-- Cabeçalho -->
+          <h5 class="modal-title">Remover Aluno</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body"> <!-- Corpo -->
+          <div class="mb-3">
+            <label class="form-label">Selecione o aluno a ser removido</label>
+            <select class="form-select" id="alunoRemoverSelect"> <!-- Lista dinâmica gerada via JS -->
+              <option value="">Selecione um aluno...</option>
+            </select>
+          </div>
+          <div class="alert alert-warning"> <!-- Alerta de ação irreversível -->
+            <strong>Atenção:</strong> O aluno será removido da turma. Esta ação não pode ser desfeita.
+          </div>
+        </div>
+        <div class="modal-footer"> <!-- Botões -->
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" type="button" id="btnConfirmarRemocaoAluno">Remover Aluno</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap bundle (JS + Popper) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    const tableHead = document.getElementById('tableHead');
-    const tableBody = document.getElementById('tableBody');
-    const mainTitle = document.getElementById('mainTitle');
-    const csvFile = document.getElementById('csvFile');
-    const componenteModal = new bootstrap.Modal(document.getElementById('componenteModal'));
-    const removerComponenteModal = new bootstrap.Modal(document.getElementById('removerComponenteModal'));
-    const infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
-    const infoModalBody = document.getElementById('infoModalBody');
+    const tableHead = document.getElementById('tableHead'); // Cabeçalho da tabela
+    const tableBody = document.getElementById('tableBody'); // Corpo da tabela
+    const mainTitle = document.getElementById('mainTitle'); // Título da página
+    const csvFile = document.getElementById('csvFile'); // Input escondido para CSV
+    const jsonFile = document.getElementById('jsonFile'); // Input escondido para JSON
+    const componenteModal = new bootstrap.Modal(document.getElementById('componenteModal')); // Modal de criar componente
+    const removerComponenteModal = new bootstrap.Modal(document.getElementById('removerComponenteModal')); // Modal de remover componente
+    const infoModal = new bootstrap.Modal(document.getElementById('infoModal')); // Modal de informações gerais
+    const infoModalBody = document.getElementById('infoModalBody'); // Corpo do modal de info
 
-    let turmaId = null;
+    let turmaId = null;        // IDs recebidos do servidor/API
     let disciplinaId = null;
     let cursoId = null;
     let instituicaoId = null;
-    let componentes = [];
-    let formulaNotaFinal = null;
+    let componentes = [];      // Lista de componentes de nota
+    let formulaNotaFinal = null; // Fórmula usada para calcular nota final
+
+    // Função para alternar visibilidade do painel de auditoria lateral
+    function toggleAuditoria() {
+      const panel = document.getElementById('auditoriaPanel'); // Painel lateral
+      const btn = document.getElementById('btnToggleAuditoria'); // Botão mostrar/ocultar
+
+      if (panel.style.display === 'none') { // Se estiver oculto, mostra
+        panel.style.display = 'block';
+        btn.textContent = 'Oultar Auditoria'; // (pequeno erro de digitação no original)
+        loadAuditoria(); // Carrega dados de auditoria
+      } else { // Caso contrário, esconde
+        panel.style.display = 'none';
+        btn.textContent = 'Mostrar Auditoria';
+      }
+    }
+
+    // Função para carregar logs de auditoria
+    async function loadAuditoria() {
+      const content = document.getElementById('auditoriaContent');
+      content.innerHTML = '<p class="text-muted text-center">Carregando...</p>'; // Mensagem inicial enquanto carrega
+
+      if (!turmaId) {
+        // Se turmaId não existir, exibe mensagem e encerra
+        content.innerHTML = '<p class="text-muted text-center">Turma não identificada</p>';
+        return;
+      }
+
+      const token = localStorage.getItem('token'); // Recupera token salvo
+      try {
+        const res = await fetch(`/api/auditoria/${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` } // Envia token no header
+        });
+
+        if (!res.ok) {
+          throw new Error('Erro ao carregar auditoria'); // Se a resposta não for OK, lança erro
+        }
+
+        const logs = await res.json(); // Converte para JSON
+
+        if (logs.length === 0) {
+          // Se não houver registros, mostra mensagem
+          content.innerHTML = '<p class="text-muted text-center">Nenhum registro de auditoria</p>';
+          return;
+        }
+
+        // Renderizar logs
+        let html = '<div class="list-group list-group-flush">';
+        logs.forEach(log => {
+          const dataHora = new Date(log.data_hora); // Converte string para objeto Date
+          const dataFormatada = dataHora.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }); // Formata data/hora no padrão brasileiro
+
+          let mensagem = '';
+          if (log.operacao === 'INSERT') {
+            // Mensagem para inserção de nota
+            mensagem = `Nota ${log.componente_sigla} lançada: ${log.valor_novo}`;
+          } else if (log.operacao === 'UPDATE') {
+            // Mensagem para alteração de nota
+            mensagem = `Nota ${log.componente_sigla} alterada de ${log.valor_antigo} para ${log.valor_novo}`;
+          }
+
+          // Monta HTML do item
+          html += `
+        <div class="list-group-item list-group-item-action p-2 mb-2 border rounded">
+          <div class="d-flex w-100 justify-content-between">
+            <small class="text-muted">${dataFormatada}</small>
+          </div>
+          <p class="mb-1 small"><strong>${log.aluno_nome}</strong></p>
+          <small>${mensagem}</small>
+        </div>
+      `;
+        });
+        html += '</div>';
+
+        content.innerHTML = html; // Insere HTML na tela
+      } catch (err) {
+        console.error('Erro ao carregar auditoria:', err); // Log erro no console
+        content.innerHTML = '<p class="text-danger text-center">Erro ao carregar auditoria</p>'; // Mensagem de erro
+      }
+    }
 
     function showInfo(msg) {
+      // Altera conteúdo do modal e exibe
       infoModalBody.textContent = msg;
       infoModal.show();
     }
 
-    function captureParams() {
-      const params = new URLSearchParams(window.location.search);
+    // Pega os parametros para usar no backend
+    async function captureParams() {
+      const params = new URLSearchParams(window.location.search); // Lê parâmetros da URL
       turmaId = params.get('turma_id');
       disciplinaId = params.get('disciplina_id');
       cursoId = params.get('curso_id');
       instituicaoId = params.get('instituicao_id');
-      const disciplinaNome = params.get('disciplina_nome');
-      const turmaNome = params.get('turma_nome');
+      let turmaNome = params.get('turma_nome');
+      let disciplinaNome = params.get('disciplina_nome');
+      let cursoNome = params.get('curso_nome');
 
-      mainTitle.textContent = (turmaNome ? `${turmaNome}` : (disciplinaNome ? disciplinaNome : 'Alunos'));
+      const token = localStorage.getItem('token'); // Pega token salvo no navegador
 
+      // Se não veio nome do curso, busca no backend
+      if (!cursoNome && cursoId) {
+        try {
+          const res = await fetch(`/api/cursos/${cursoId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            cursoNome = data.nome; // Atribui nome recebido
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // Se não veio nome da disciplina, busca no backend
+      if (!disciplinaNome && disciplinaId) {
+        try {
+          const res = await fetch(`/api/disciplinas/${disciplinaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            disciplinaNome = data.nome;
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // Se não veio nome da turma, busca no backend
+      if (!turmaNome && turmaId) {
+        try {
+          const res = await fetch(`/api/turmas/${turmaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            turmaNome = data.nome;
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // Seleciona elementos da navbar para atualizar textos
       const btnVoltarCursos = document.getElementById('btnVoltarCursos');
       const btnVoltarDisciplinas = document.getElementById('btnVoltarDisciplinas');
+      const btnVoltarTurmas = document.getElementById('btnVoltarTurmas');
+      const breadcrumbAlunos = document.getElementById('breadcrumbAlunos');
 
-      if (btnVoltarCursos) btnVoltarCursos.onclick = (e) => {
-        e?.preventDefault();
-        const token = localStorage.getItem('token');
-        window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
-      };
+      if (btnVoltarCursos) {
+        btnVoltarCursos.textContent = cursoNome || 'Cursos'; // Altera nome dinamicamente
+        btnVoltarCursos.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
+        };
+      }
 
-      if (btnVoltarDisciplinas) btnVoltarDisciplinas.onclick = (e) => {
-        e?.preventDefault();
-        const token = localStorage.getItem('token');
-        window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
-      };
+      if (btnVoltarDisciplinas) {
+        btnVoltarDisciplinas.textContent = disciplinaNome || 'Disciplinas';
+        btnVoltarDisciplinas.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+        };
+      }
+
+      if (btnVoltarTurmas) {
+        btnVoltarTurmas.textContent = turmaNome || 'Turmas';
+        btnVoltarTurmas.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = `/turmas?token=${token}&disciplina_id=${disciplinaId}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+        };
+      }
+
+      if (breadcrumbAlunos) {
+        breadcrumbAlunos.textContent = 'Alunos'; // Atualiza breadcrumb
+      }
+
+      // Atualiza o título principal na página
+      if (mainTitle) {
+        mainTitle.textContent = turmaNome || disciplinaNome || 'Alunos';
+      }
     }
+
+    // Roda automaticamente assim que o DOM carregar
+    window.addEventListener('DOMContentLoaded', async () => {
+      await captureParams(); // Captura parâmetros da URL
+      await init(); // Inicializa dados da página
+    });
+
+
 
     // MONTA CABEÇALHO
     function buildTableHeader(mostrarNotaFinal = false) {
-      tableHead.innerHTML = '';
-      const tr = document.createElement('tr');
+      tableHead.innerHTML = ''; // Limpa cabeçalho atual
+      const tr = document.createElement('tr'); // Cria linha <tr>
       tr.innerHTML = `
-        <th style="min-width:120px">Matrícula</th>
-        <th>Nome</th>
-      `;
+    <th style="min-width:120px">Matrícula</th>
+    <th>Nome</th>
+  `; // Insere colunas fixas iniciais
+
       componentes.forEach(c => {
+        // Para cada componente, cria uma coluna
         const th = document.createElement('th');
-        th.textContent = c.sigla;
+        th.textContent = c.sigla; // Nome da coluna = sigla do componente
         tr.appendChild(th);
       });
+
       if (mostrarNotaFinal) {
+        // Se a fórmula existir e deve mostrar nota final
         const th = document.createElement('th');
         th.textContent = 'Nota Final';
         th.style.fontWeight = 'bold';
         tr.appendChild(th);
       }
-      tableHead.appendChild(tr);
+
+      tableHead.appendChild(tr); // Adiciona a linha ao cabeçalho
     }
 
     async function loadComponentes() {
-      componentes = [];
-      if (!disciplinaId) return;
+      componentes = []; // Zera a lista antes de carregar
+      if (!disciplinaId) return; // Se disciplina não informada, aborta
       const token = localStorage.getItem('token');
       try {
         const res = await fetch(`/api/componentes?disciplina_id=${disciplinaId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (!res.ok) return;
-        componentes = await res.json();
+        if (!res.ok) return; // Se erro no backend, não faz nada
+        componentes = await res.json(); // Salva componentes recebidos
       } catch (err) {
         console.error('Erro ao carregar componentes', err);
       }
     }
 
     async function loadFormulaNotaFinal() {
-      if (!disciplinaId) return;
+      if (!disciplinaId) return; // Sem disciplina não pode buscar fórmula
       const token = localStorage.getItem('token');
       try {
         const res = await fetch(`/api/formula-nota-final/${disciplinaId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
-          formulaNotaFinal = await res.json();
+          formulaNotaFinal = await res.json(); // Armazena fórmula recebida
         }
       } catch (err) {
         console.error('Erro ao carregar fórmula:', err);
@@ -260,47 +557,47 @@
 
     function calcularNotaFinal(notasAluno) {
       if (!formulaNotaFinal || !formulaNotaFinal.expressao) {
+        // Se fórmula não existe, não calcula
         return null;
       }
 
       try {
-        // Substituir as siglas dos componentes pelos valores das notas
+        // Copia expressão da fórmula (ex: "(A1 + A2) / 2")
         let expressao = formulaNotaFinal.expressao;
-        
-        // Verificar se todas as notas estão presentes
+
+        // Garante que TODAS as notas estejam presentes
         for (const c of componentes) {
           const valor = notasAluno[c.sigla];
           if (valor === null || valor === undefined || valor === '') {
-            return null; // Se alguma nota estiver faltando, não calcula
+            return null; // Não calcula se alguma nota estiver faltando
           }
         }
 
-        // Substituir as siglas pelos valores
+        // Substitui cada sigla (ex: A1, A2) pelo valor da nota
         componentes.forEach(c => {
           const valor = notasAluno[c.sigla];
-          // Substituir a sigla pelo valor (case insensitive, word boundary)
-          const regex = new RegExp(`\\b${c.sigla}\\b`, 'gi');
+          const regex = new RegExp(`\\b${c.sigla}\\b`, 'gi'); // Match exato da sigla
           expressao = expressao.replace(regex, valor);
         });
 
-        // Avaliar a expressão matemática de forma segura
-        // Usar Function para evitar eval direto
+        // Avalia expressão matematicamente de forma controlada
         const resultado = Function('"use strict"; return (' + expressao + ')')();
-        
-        // Arredondar para 2 casas decimais
+
+        // Arredonda para 2 casas decimais
         return Math.round(resultado * 100) / 100;
       } catch (err) {
         console.error('Erro ao calcular nota final:', err, 'Expressão:', formulaNotaFinal.expressao);
-        return null;
+        return null; // Se der erro, não exibe nota final
       }
     }
 
     async function loadAlunos() {
-      tableBody.innerHTML = '';
+      tableBody.innerHTML = ''; // Limpa tabela antes de preencher
       if (!turmaId) {
         showInfo('turma_id não fornecido na URL');
         return;
       }
+
       const token = localStorage.getItem('token');
       try {
         const res = await fetch(`/api/alunos?turma_id=${turmaId}`, {
@@ -310,9 +607,11 @@
           showInfo('Erro ao carregar alunos');
           return;
         }
-        const alunos = await res.json();
+
+        const alunos = await res.json(); // Lista de alunos retornada
 
         if (alunos.length === 0) {
+          // Se não tem alunos, exibe linha única
           const tr = document.createElement('tr');
           const colspan = 2 + componentes.length + (formulaNotaFinal && formulaNotaFinal.expressao ? 1 : 0);
           tr.innerHTML = `<td colspan="${colspan}" class="text-center text-muted">Nenhum aluno cadastrado</td>`;
@@ -320,7 +619,7 @@
           return;
         }
 
-        // Buscar notas existentes
+        // Buscar notas já registradas no backend
         let notasExistentes = {};
         try {
           const notasRes = await fetch(`/api/notas/turma/${turmaId}`, {
@@ -329,6 +628,7 @@
           if (notasRes.ok) {
             const notas = await notasRes.json();
             notas.forEach(nota => {
+              // Cria chave identificando nota: "alunoId_sigla"
               const key = `${nota.aluno_id}_${nota.componente_sigla}`;
               notasExistentes[key] = nota.valor;
             });
@@ -339,211 +639,219 @@
 
         alunos.forEach(al => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${al.identificador}</td><td>${al.nome}</td>`;
+          tr.innerHTML = `<td>${al.identificador}</td><td>${al.nome}</td>`; // Primeiras colunas: matrícula e nome
 
-          // Obter notas do aluno para cálculo
+          // Cria objeto contendo as notas do aluno para cada componente
           const notasAluno = {};
           componentes.forEach(c => {
             const notaKey = `${al.id}_${c.sigla}`;
-            notasAluno[c.sigla] = notasExistentes[notaKey] || null;
+            notasAluno[c.sigla] = notasExistentes[notaKey] || null; // Se não existir, coloca null
           });
 
           componentes.forEach(c => {
-            const td = document.createElement('td');
+            const td = document.createElement('td'); // Cria célula da nota
             const notaKey = `${al.id}_${c.sigla}`;
-            const valorNota = notasExistentes[notaKey] || '';
+            const valorNota = notasExistentes[notaKey] || ''; // Nota existente OU vazio
+
 
             /* === INPUT EDITÁVEL === */
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.step = '0.01';
-            input.min = '0';
-            input.max = '10';
-            input.className = `form-control form-control-sm nota-input nota-${c.sigla}`;
-            input.dataset.componente = c.sigla;
-            input.dataset.alunoId = al.id;
-            input.value = valorNota;
-            input.disabled = true;
+            const input = document.createElement('input'); // Cria um elemento <input>
+            input.type = 'number'; // Tipo número
+            input.step = '0.01'; // Aceita decimais com duas casas
+            input.min = '0'; // Valor mínimo permitido
+            input.max = '10'; // Valor máximo permitido
+            input.className = `form-control form-control-sm nota-input nota-${c.sigla}`; // Classes CSS (inclui classe dinâmica com a sigla)
+            input.dataset.componente = c.sigla; // Guarda a sigla do componente como data-attribute
+            input.dataset.alunoId = al.id; // Guarda o ID do aluno como data-attribute
+            input.value = valorNota; // Preenche o valor da nota (se existir)
+            input.disabled = true; // Input começa desativado (provavelmente habilita no modo edição)
 
             // Adicionar validação em tempo real
             input.addEventListener('input', (e) => {
-              const inputEl = e.target;
-              const valor = inputEl.value.trim();
-              
+              const inputEl = e.target; // Referência ao input
+              const valor = inputEl.value.trim(); // Valor digitado
+
               if (valor === '') {
-                inputEl.classList.remove('is-invalid');
+                inputEl.classList.remove('is-invalid'); // Se vazio, remove erro
                 return;
               }
 
-              const valorNumerico = parseFloat(valor);
+              const valorNumerico = parseFloat(valor); // Converte para número
               if (isNaN(valorNumerico) || valorNumerico < 0 || valorNumerico > 10) {
-                inputEl.classList.add('is-invalid');
+                inputEl.classList.add('is-invalid'); // Marca como inválido
               } else {
-                inputEl.classList.remove('is-invalid');
+                inputEl.classList.remove('is-invalid'); // Remove erro
               }
             });
 
             // Adicionar event listener para salvar nota quando o usuário sair do campo
             input.addEventListener('blur', async (e) => {
-              const inputEl = e.target;
-              const valor = inputEl.value.trim();
-              
+              const inputEl = e.target; // Input alvo
+              const valor = inputEl.value.trim(); // Valor digitado
+
               if (valor === '' || valor === null || valor === undefined) {
-                inputEl.classList.remove('is-invalid');
-                return; // Não salva se estiver vazio
+                inputEl.classList.remove('is-invalid'); // Se vazio, remove erro e não salva
+                return;
               }
 
-              const valorNumerico = parseFloat(valor);
+              const valorNumerico = parseFloat(valor); // Converte para número
               if (isNaN(valorNumerico)) {
-                inputEl.classList.add('is-invalid');
+                inputEl.classList.add('is-invalid'); // Inválido
                 showInfo('Por favor, insira notas válidas! (0-10)');
-                inputEl.value = '';
+                inputEl.value = ''; // Limpa
                 return;
               }
 
               if (valorNumerico < 0 || valorNumerico > 10) {
-                inputEl.classList.add('is-invalid');
+                inputEl.classList.add('is-invalid'); // Fora do intervalo
                 showInfo('Por favor, insira notas válidas! (0-10)');
                 inputEl.value = '';
                 return;
               }
 
-              inputEl.classList.remove('is-invalid');
+              inputEl.classList.remove('is-invalid'); // Valor válido
 
-              const token = localStorage.getItem('token');
+              const token = localStorage.getItem('token'); // Pega token do localStorage
               try {
                 const res = await fetch('/api/notas', {
-                  method: 'POST',
+                  method: 'POST', // Envio HTTP
                   headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}` // Autenticação
                   },
                   body: JSON.stringify({
-                    aluno_id: inputEl.dataset.alunoId,
-                    turma_id: turmaId,
-                    componente_sigla: inputEl.dataset.componente,
-                    valor: valorNumerico
+                    aluno_id: inputEl.dataset.alunoId, // ID aluno
+                    turma_id: turmaId, // ID turma
+                    componente_sigla: inputEl.dataset.componente, // Sigla componente
+                    valor: valorNumerico // Nota
                   })
                 });
 
                 const data = await res.json();
                 if (!res.ok) {
-                  throw new Error(data.error || 'Erro ao salvar nota');
+                  throw new Error(data.error || 'Erro ao salvar nota'); // Se erro no backend
                 }
-                
+
+                // Recarregar auditoria se o painel estiver visível
+                const auditoriaPanel = document.getElementById('auditoriaPanel');
+                if (auditoriaPanel && auditoriaPanel.style.display !== 'none') {
+                  loadAuditoria(); // Atualiza
+                }
+
                 // Atualizar nota final se houver fórmula
                 if (formulaNotaFinal && formulaNotaFinal.expressao) {
-                  const tr = inputEl.closest('tr');
-                  const notaFinalTd = tr.querySelector('td:last-child');
+                  const tr = inputEl.closest('tr'); // Linha do aluno
+                  const notaFinalTd = tr.querySelector('td:last-child'); // Última coluna
                   if (notaFinalTd) {
                     // Recalcular notas do aluno
                     const notasAluno = {};
                     componentes.forEach(c => {
-                      const notaInput = tr.querySelector(`.nota-${c.sigla}`);
+                      const notaInput = tr.querySelector(`.nota-${c.sigla}`); // Pega input de cada componente
                       notasAluno[c.sigla] = notaInput ? parseFloat(notaInput.value) || null : null;
                     });
-                    const notaFinal = calcularNotaFinal(notasAluno);
+                    const notaFinal = calcularNotaFinal(notasAluno); // Calcula nota final
                     const inputNotaFinal = notaFinalTd.querySelector('input');
                     if (inputNotaFinal) {
-                      inputNotaFinal.value = notaFinal !== null ? notaFinal.toFixed(2) : '—';
+                      inputNotaFinal.value = notaFinal !== null ? notaFinal.toFixed(2) : '—'; // Atualiza input da nota final
                     }
                   }
                 }
               } catch (err) {
                 console.error('Erro ao salvar nota:', err);
-                showInfo('Erro ao salvar nota: ' + (err.message || err));
+                showInfo('Erro ao salvar nota: ' + (err.message || err)); // Informa usuário
               }
             });
 
-            td.appendChild(input);
-            tr.appendChild(td);
+            td.appendChild(input); // Coloca input dentro da célula
+            tr.appendChild(td); // Adiciona célula à linha
           });
 
           // Adicionar coluna de Nota Final se houver fórmula
           if (formulaNotaFinal && formulaNotaFinal.expressao) {
-            const td = document.createElement('td');
-            const notaFinal = calcularNotaFinal(notasAluno);
-            const inputNotaFinal = document.createElement('input');
+            const td = document.createElement('td'); // Cria célula
+            const notaFinal = calcularNotaFinal(notasAluno); // Calcula nota
+            const inputNotaFinal = document.createElement('input'); // Cria input
             inputNotaFinal.type = 'text';
             inputNotaFinal.className = 'form-control form-control-sm';
-            inputNotaFinal.value = notaFinal !== null ? notaFinal.toFixed(2) : '—';
-            inputNotaFinal.readOnly = true;
-            inputNotaFinal.style.backgroundColor = '#f8f9fa';
-            inputNotaFinal.style.fontWeight = 'bold';
-            td.appendChild(inputNotaFinal);
-            tr.appendChild(td);
+            inputNotaFinal.value = notaFinal !== null ? notaFinal.toFixed(2) : '—'; // Preenche valor
+            inputNotaFinal.readOnly = true; // Somente leitura
+            inputNotaFinal.style.backgroundColor = '#f8f9fa'; // Estilo
+            inputNotaFinal.style.fontWeight = 'bold'; // Negrito
+            td.appendChild(inputNotaFinal); // Coloca input na célula
+            tr.appendChild(td); // Adiciona célula à linha
           }
 
-          tableBody.appendChild(tr);
+          tableBody.appendChild(tr); // Adiciona linha ao corpo da tabela
         });
       } catch (err) {
         console.error('Erro ao carregar alunos', err);
-        showInfo('Erro ao carregar alunos');
+        showInfo('Erro ao carregar alunos'); // Exibe erro
       }
     }
 
-    // === MODO DE EDIÇÃO ===
-    let componentesGlobais = [];
 
-    function carregarSelectDeComponentes(componentes) {
+    // === MODO DE EDIÇÃO ===
+    let componentesGlobais = [];  // Armazena os componentes disponíveis globalmente
+
+    function carregarSelectDeComponentes(componentes) {  // Preenche o <select> com componentes
       componentesGlobais = componentes;
       const select = document.getElementById("componenteSelecionado");
-      select.innerHTML = "";
+      select.innerHTML = "";  // Limpa o select
 
       componentes.forEach(c => {
-        const op = document.createElement("option");
-        op.value = c.sigla;
-        op.textContent = c.sigla;
-        select.appendChild(op);
+        const op = document.createElement("option");  // Cria option
+        op.value = c.sigla;  // Valor = sigla
+        op.textContent = c.sigla; // Texto exibido
+        select.appendChild(op);  // Adiciona ao select
       });
 
-      habilitarSomenteUmComponente();
+      habilitarSomenteUmComponente(); // Ativa a lógica do modo "componente"
     }
 
     function alternarModoEdicao() {
-      const modo = document.getElementById("modoEdicao").value;
+      const modo = document.getElementById("modoEdicao").value;  // Obtém o modo selecionado
 
       if (modo === "exibicao") {
-        // 🔥 EXIBIÇÃO = TUDO DESABILITADO
+        // EXIBIÇÃO = TUDO DESABILITADO
         document.querySelectorAll(".nota-input").forEach(inp => inp.disabled = true);
         return;
       }
 
       if (modo === "total") {
-        document.querySelectorAll(".nota-input").forEach(inp => inp.disabled = false);
+        document.querySelectorAll(".nota-input").forEach(inp => inp.disabled = false); // Habilita tudo
         return;
       }
 
       // componente
-      habilitarSomenteUmComponente();
+      habilitarSomenteUmComponente();  // Habilita apenas um componente
     }
 
     function habilitarSomenteUmComponente() {
-      const modo = document.getElementById("modoEdicao").value;
+      const modo = document.getElementById("modoEdicao").value;  // Verifica se modo = componente
 
       if (modo !== "componente") return;
 
-      const sigla = document.getElementById("componenteSelecionado").value;
+      const sigla = document.getElementById("componenteSelecionado").value; // Componente selecionado
 
       document.querySelectorAll(".nota-input").forEach(inp => {
-        inp.disabled = inp.dataset.componente !== sigla;
+        inp.disabled = inp.dataset.componente !== sigla;  // Habilita apenas notas do componente escolhido
       });
     }
     // ==========================
 
     // criar componente via modal
-    document.getElementById('btnCriarComponente').addEventListener('click', () => componenteModal.show());
+    document.getElementById('btnCriarComponente').addEventListener('click', () => componenteModal.show()); // Abre modal
     document.getElementById('componenteForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nome = document.getElementById('compNome').value.trim();
-      const sigla = document.getElementById('compSigla').value.trim().toUpperCase();
-      const descricao = document.getElementById('compDescricao').value.trim();
+      const nome = document.getElementById('compNome').value.trim();  // Nome do componente
+      const sigla = document.getElementById('compSigla').value.trim().toUpperCase(); // Sigla
+      const descricao = document.getElementById('compDescricao').value.trim();  // Descrição
 
       if (!disciplinaId) { showInfo('disciplina_id ausente na URL'); return; }
 
       const token = localStorage.getItem('token');
       try {
-        const res = await fetch('/api/componentes', {
+        const res = await fetch('/api/componentes', {  // Envia POST para API
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ nome, sigla, descricao, disciplina_id: disciplinaId })
@@ -552,12 +860,12 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro');
 
-        componenteModal.hide();
-        document.getElementById('compNome').value = '';
+        componenteModal.hide();  // Fecha modal
+        document.getElementById('compNome').value = '';  // Limpa inputs
         document.getElementById('compSigla').value = '';
         document.getElementById('compDescricao').value = '';
 
-        await init();
+        await init();  // Recarrega página
         showInfo('Componente criado com sucesso');
 
       } catch (err) {
@@ -569,26 +877,26 @@
     // remover componente via modal
     document.getElementById('btnRemoverComponente').addEventListener('click', () => {
       const select = document.getElementById('componenteRemoverSelect');
-      select.innerHTML = '<option value="">Selecione um componente...</option>';
-      
+      select.innerHTML = '<option value="">Selecione um componente...</option>';  // Reseta select
+
       if (componentes.length === 0) {
         showInfo('Não há componentes para remover');
         return;
       }
 
-      componentes.forEach(c => {
+      componentes.forEach(c => {  // Preenche select com componentes
         const op = document.createElement('option');
         op.value = c.id;
         op.textContent = `${c.sigla} - ${c.nome}`;
         select.appendChild(op);
       });
 
-      removerComponenteModal.show();
+      removerComponenteModal.show();  // Exibe modal
     });
 
     document.getElementById('btnConfirmarRemocao').addEventListener('click', async () => {
       const componenteId = document.getElementById('componenteRemoverSelect').value;
-      
+
       if (!componenteId) {
         showInfo('Selecione um componente para remover');
         return;
@@ -600,7 +908,7 @@
 
       const token = localStorage.getItem('token');
       try {
-        const res = await fetch(`/api/componentes/${componenteId}`, {
+        const res = await fetch(`/api/componentes/${componenteId}`, {  // DELETE API
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -608,10 +916,10 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao remover componente');
 
-        removerComponenteModal.hide();
+        removerComponenteModal.hide();  // Fecha modal
         document.getElementById('componenteRemoverSelect').value = '';
 
-        await init();
+        await init();  // Reload
         showInfo('Componente removido com sucesso');
 
       } catch (err) {
@@ -620,7 +928,7 @@
       }
     });
 
-    csvFile.addEventListener('change', async (e) => {
+    csvFile.addEventListener('change', async (e) => {  // Ao importar CSV
       const file = e.target.files[0];
       if (!file) return;
 
@@ -634,7 +942,7 @@
       const token = localStorage.getItem('token');
 
       try {
-        const res = await fetch(`/notas/turma/${turmaId}/importar-alunos-csv`, {
+        const res = await fetch(`/api/turmas/${turmaId}/import`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
           body: formData
@@ -645,7 +953,7 @@
 
         showInfo(`Importação concluída — inseridos: ${data.adicionados || 0}, pulados: ${data.errosDeLogica || 0}`);
         csvFile.value = '';
-        await init();
+        await init();  // Recarrega lista
 
       } catch (err) {
         console.error(err);
@@ -667,14 +975,14 @@
       }
 
       const token = localStorage.getItem('token');
-      
+
       // Garantir que a fórmula esteja carregada
       if (!formulaNotaFinal && disciplinaId) {
-        await loadFormulaNotaFinal();
+        await loadFormulaNotaFinal(); // Carrega fórmula de nota final
       }
-      
+
       try {
-        const res = await fetch(`/api/notas/turma/${turmaId}`, {
+        const res = await fetch(`/api/notas/turma/${turmaId}`, {  // Busca notas da turma
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -683,12 +991,13 @@
           throw new Error(data.error || 'Erro ao buscar notas');
         }
 
-        const notas = await res.json();
+        const notas = await res.json();  // Lista de notas
 
         // Organizar notas por aluno
         const notasPorAluno = {};
         notas.forEach(nota => {
-          const key = `${nota.aluno_id}_${nota.identificador}_${nota.nome}`;
+          const key = `${nota.aluno_id}_${nota.identificador}_${nota.nome}`; // Chave única para agrupamento
+
           if (!notasPorAluno[key]) {
             notasPorAluno[key] = {
               identificador: nota.identificador,
@@ -696,17 +1005,19 @@
               notas: {}
             };
           }
-          // Armazenar o valor da nota (pode ser null se não houver nota)
+
+          // Armazena valor da nota por componente
           notasPorAluno[key].notas[nota.componente_sigla] = nota.valor;
         });
 
+
         // Validar se todas as notas estão preenchidas e são válidas
         const alunos = Object.values(notasPorAluno);
-        
+
         for (const aluno of alunos) {
           for (const componente of componentes) {
             const valor = aluno.notas[componente.sigla];
-            
+
             // Verificar se a nota está preenchida
             // Considera válido: números (incluindo 0), strings numéricas não vazias
             // Considera inválido: null, undefined, string vazia, string '-'
@@ -714,7 +1025,7 @@
               showInfo('Só é possível realizar a exportação quando todos os componentes possuírem nota lançada');
               return;
             }
-            
+
             // Verificar se é um número válido (mesmo que seja string numérica)
             const valorNumerico = parseFloat(valor);
             if (isNaN(valorNumerico)) {
@@ -732,25 +1043,25 @@
 
         // Gerar CSV
         const headers = ['Matrícula', 'Nome', ...componentes.map(c => c.sigla)];
-        
+
         // Adicionar coluna de Nota Final se houver fórmula
         if (formulaNotaFinal && formulaNotaFinal.expressao) {
           headers.push('Nota Final');
         }
-        
+
         const rows = alunos.map(aluno => {
           const linha = [
             aluno.identificador,
             aluno.nome,
             ...componentes.map(c => aluno.notas[c.sigla] || '')
           ];
-          
+
           // Adicionar nota final se houver fórmula
           if (formulaNotaFinal && formulaNotaFinal.expressao) {
             const notaFinal = calcularNotaFinal(aluno.notas);
             linha.push(notaFinal !== null ? notaFinal.toFixed(2) : '—');
           }
-          
+
           return linha.map(campo => {
             // Escapar campos que contêm vírgula ou aspas
             if (typeof campo === 'string' && (campo.includes(',') || campo.includes('"') || campo.includes('\n'))) {
@@ -771,10 +1082,10 @@
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const seconds = String(now.getSeconds()).padStart(2, '0');
         const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-        
+
         const params = new URLSearchParams(window.location.search);
         const turmaNome = params.get('turma_nome') || `Turma${turmaId}`;
-        
+
         // Buscar sigla da disciplina
         let disciplinaSigla = 'SIGLA';
         if (disciplinaId) {
@@ -790,7 +1101,7 @@
             console.error('Erro ao buscar sigla da disciplina:', err);
           }
         }
-        
+
         const fileName = `${year}-${month}-${day}_${hours}${minutes}${seconds}${milliseconds}-${turmaNome}_${disciplinaSigla}.csv`;
 
         // Fazer download
@@ -812,6 +1123,171 @@
       }
     });
 
+    // Importar JSON (alunos)
+    jsonFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!confirm(`Enviar JSON para a turma?`)) {
+        jsonFile.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const text = event.target && event.target.result ? String(event.target.result) : '';
+          const jsonData = JSON.parse(text);
+
+          if (!Array.isArray(jsonData)) {
+            showInfo('O arquivo JSON deve conter um array de alunos');
+            jsonFile.value = '';
+            return;
+          }
+
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/turmas/${turmaId}/import-json`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(jsonData)
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Erro na importação');
+
+          showInfo(`Importação concluída — inseridos: ${data.adicionados || 0}, pulados: ${data.errosDeLogica || 0}`);
+          jsonFile.value = '';
+          await init();
+        } catch (err) {
+          console.error(err);
+          showInfo('Erro ao importar JSON: ' + (err.message || err));
+          jsonFile.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Exportar JSON (notas por aluno)
+    document.getElementById('btnExportarJson').addEventListener('click', async () => {
+      if (!turmaId) {
+        showInfo('turma_id não fornecido na URL');
+        return;
+      }
+
+      if (componentes.length === 0) {
+        showInfo('Não há componentes cadastrados para exportar');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!formulaNotaFinal && disciplinaId) {
+        await loadFormulaNotaFinal();
+      }
+
+      try {
+        const res = await fetch(`/api/notas/turma/${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao buscar notas');
+        }
+
+        const notas = await res.json();
+
+        const notasPorAluno = {};
+        notas.forEach(nota => {
+          const key = `${nota.aluno_id}_${nota.identificador}_${nota.nome}`;
+          if (!notasPorAluno[key]) {
+            notasPorAluno[key] = {
+              identificador: nota.identificador,
+              nome: nota.nome,
+              notas: {}
+            };
+          }
+          notasPorAluno[key].notas[nota.componente_sigla] = nota.valor;
+        });
+
+        const alunos = Object.values(notasPorAluno);
+        for (const aluno of alunos) {
+          for (const componente of componentes) {
+            const valor = aluno.notas[componente.sigla];
+            if (valor === null || valor === undefined || valor === '' || valor === '-') {
+              showInfo('Só é possível realizar a exportação quando todos os componentes possuírem nota lançada');
+              return;
+            }
+            const valorNumerico = parseFloat(valor);
+            if (isNaN(valorNumerico) || valorNumerico < 0 || valorNumerico > 10) {
+              showInfo('Por favor, insira notas válidas! (0-10)');
+              return;
+            }
+          }
+        }
+
+        const jsonExport = alunos.map(aluno => {
+          const out = {
+            identificador: aluno.identificador,
+            nome: aluno.nome
+          };
+          componentes.forEach(c => {
+            out[c.sigla] = aluno.notas[c.sigla] ?? null;
+          });
+          if (formulaNotaFinal && formulaNotaFinal.expressao) {
+            const notaFinal = calcularNotaFinal(aluno.notas);
+            out['nota_final'] = notaFinal !== null ? Number(notaFinal.toFixed(2)) : null;
+          }
+          return out;
+        });
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
+        const params = new URLSearchParams(window.location.search);
+        const turmaNome = params.get('turma_nome') || `Turma${turmaId}`;
+
+        let disciplinaSigla = 'SIGLA';
+        if (disciplinaId) {
+          try {
+            const disciplinaRes = await fetch(`/api/disciplinas/${disciplinaId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (disciplinaRes.ok) {
+              const disciplina = await disciplinaRes.json();
+              disciplinaSigla = disciplina.sigla || 'SIGLA';
+            }
+          } catch (err) {
+            console.error('Erro ao buscar sigla da disciplina:', err);
+          }
+        }
+
+        const fileName = `${year}-${month}-${day}_${hours}${minutes}${seconds}${milliseconds}-${turmaNome}_${disciplinaSigla}.json`;
+        const blob = new Blob([JSON.stringify(jsonExport, null, 2)], { type: 'application/json;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showInfo('JSON exportado com sucesso');
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao exportar JSON: ' + (err.message || err));
+      }
+    });
+
     async function init() {
       await loadComponentes();
       await loadFormulaNotaFinal();
@@ -819,15 +1295,142 @@
       await loadAlunos();
       carregarSelectDeComponentes(componentes);
 
-      // 🔥 DEIXAR EXIBIÇÃO COMO PADRÃO
+      // DEIXAR EXIBIÇÃO COMO PADRÃO
       document.getElementById("modoEdicao").value = "exibicao";
       alternarModoEdicao();
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      captureParams();
-      init();
+    const adicionarAlunoModal = new bootstrap.Modal(document.getElementById('adicionarAlunoModal'));
+    const removerAlunoModal = new bootstrap.Modal(document.getElementById('removerAlunoModal'));
+
+    // Abrir modal de adicionar aluno
+    document.getElementById('btnAdicionarAluno').addEventListener('click', () => {
+      adicionarAlunoModal.show();
     });
+
+    // Adicionar aluno
+    document.getElementById('adicionarAlunoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const identificador = document.getElementById('alunoMatricula').value.trim();
+      const nome = document.getElementById('alunoNome').value.trim();
+
+      if (!identificador || !nome) {
+        showInfo('Preencha todos os campos');
+        return;
+      }
+
+      if (!turmaId) {
+        showInfo('turma_id não fornecido');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/alunos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            identificador,
+            nome,
+            turma_id: turmaId
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao adicionar aluno');
+
+        adicionarAlunoModal.hide();
+        document.getElementById('alunoMatricula').value = '';
+        document.getElementById('alunoNome').value = '';
+
+        await init();
+        showInfo('Aluno adicionado com sucesso');
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao adicionar aluno: ' + (err.message || err));
+      }
+    });
+
+    // Abrir modal de remover aluno
+    document.getElementById('btnRemoverAluno').addEventListener('click', async () => {
+      if (!turmaId) {
+        showInfo('turma_id não fornecido');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/alunos?turma_id=${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Erro ao buscar alunos');
+
+        const alunos = await res.json();
+
+        const select = document.getElementById('alunoRemoverSelect');
+        select.innerHTML = '<option value="">Selecione um aluno...</option>';
+
+        if (alunos.length === 0) {
+          showInfo('Não há alunos cadastrados na turma');
+          return;
+        }
+
+        alunos.forEach(aluno => {
+          const option = document.createElement('option');
+          option.value = aluno.id;
+          option.textContent = `${aluno.identificador} - ${aluno.nome}`;
+          select.appendChild(option);
+        });
+
+        removerAlunoModal.show();
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao carregar alunos: ' + (err.message || err));
+      }
+    });
+
+    // Confirmar remoção de aluno
+    document.getElementById('btnConfirmarRemocaoAluno').addEventListener('click', async () => {
+      const alunoId = document.getElementById('alunoRemoverSelect').value;
+
+      if (!alunoId) {
+        showInfo('Selecione um aluno para remover');
+        return;
+      }
+
+      if (!confirm('Tem certeza que deseja remover este aluno da turma?')) {
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/alunos/${alunoId}?turma_id=${turmaId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao remover aluno');
+
+        removerAlunoModal.hide();
+        document.getElementById('alunoRemoverSelect').value = '';
+
+        await init();
+        showInfo('Aluno removido com sucesso');
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao remover aluno: ' + (err.message || err));
+      }
+    });
+
   </script>
 </body>
+
 </html>

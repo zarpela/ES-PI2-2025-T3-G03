@@ -12,7 +12,7 @@
   - HTML5  
   - CSS3 com **Bootstrap**  
 - **Banco de Dados:** [MySQL](https://www.mysql.com)  
-- **Gerenciamento de Projeto:** [GitHub Projects](https://github.com/features/projects) 
+- **Gerenciamento de Projeto:** [GitHub Projects](https://github.com/users/zarpela/projects/2) 
 
 ## Como rodar o projeto
 

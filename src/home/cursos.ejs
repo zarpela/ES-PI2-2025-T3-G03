@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- Navbar topo igual Instituições -->
+  <!-- NAVBAR PADRÃO -->
   <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
     <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
       <div>
@@ -98,6 +98,7 @@
     const addCursoModal = new bootstrap.Modal(document.getElementById('addCursoModal'));
     const editCursoModal = new bootstrap.Modal(document.getElementById('editCursoModal'));
 
+    // Carrega as instituições para o select de cursos (adição/edição)
     async function loadInstituicoesSelect(selectId) {
       const token = localStorage.getItem('token');
       try {
@@ -117,6 +118,8 @@
       }
     }
 
+    // Renderiza o card de adicionar curso
+     const headerCursos = document.getElementById('headerCursos');
     function renderAddCard() {
       const card = document.createElement('div');
       card.className = 'card-add-dashboard';
@@ -142,6 +145,7 @@
       cardsContainer.appendChild(card);
     }
 
+    // Carrega os cursos do usuário e renderiza os cards
     async function loadCursos() {
       cardsContainer.innerHTML = '';
       try {

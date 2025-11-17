@@ -1,0 +1,83 @@
+<!--Desenvolvido por Rafael Candian e Rafael Henrique dos Santos Inácio-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" /> <!-- Define charset UTF-8 para suportar acentos -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> <!-- Responsividade em dispositivos -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" /> <!-- Bootstrap CDN -->
+  <title>Redefinir Senha - NotaDez</title> <!-- Título da aba -->
+  <link rel="stylesheet" href="/public/base-cad-log.css" /> <!-- CSS customizado -->
+</head>
+<body>
+  <main class="container py-5 d-flex justify-content-center align-items-center"> <!-- Container centralizado -->
+    <form id="form-redefinir" class="w-100" style="max-width: 420px;"> <!-- Formulário com largura máxima -->
+      <h1 class="mb-4 text-center">Redefinir Senha</h1> <!-- Título -->
+      <div id="alert-area"></div> <!-- Área onde aparecerão alertas -->
+
+      <input type="hidden" id="token" value="<%= token %>"> <!-- Token enviado pelo backend via EJS -->
+
+      <div class="mb-3"> <!-- Campo nova senha -->
+        <label for="novaSenha" class="form-label">Nova Senha</label>
+        <input type="password" class="form-control" id="novaSenha" required minlength="6" placeholder="Mínimo 6 caracteres" />
+      </div>
+
+      <div class="mb-4"> <!-- Campo confirmar senha -->
+        <label for="confirmarSenha" class="form-label">Confirmar Senha</label>
+        <input type="password" class="form-control" id="confirmarSenha" required minlength="6" placeholder="Repita a nova senha" />
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end"> <!-- Botões alinhados à direita -->
+        <a href="/" class="btn btn-light mb-3">Cancelar</a> <!-- Volta à página inicial -->
+        <button type="submit" class="btn btn-primary mb-3">Redefinir</button> <!-- Envia formulário -->
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById('form-redefinir'); // Seleciona o formulário
+    const alertArea = document.getElementById('alert-area'); // Área para mensagens
+    const token = document.getElementById('token').value; // Token escondido
+
+    // Função para exibir alertas dinâmicos na tela
+    function showAlert(message, type='danger'){
+      alertArea.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+    }
+
+    // Evento de submissão do formulário
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Evita recarregar a página
+      alertArea.innerHTML=''; // Limpa alertas anteriores
+
+      const novaSenha = document.getElementById('novaSenha').value; // Lê nova senha
+      const confirmarSenha = document.getElementById('confirmarSenha').value; // Lê confirmação
+
+      if(novaSenha !== confirmarSenha){ // Verifica se as senhas são iguais
+        showAlert('As senhas não coincidem.');
+        return;
+      }
+
+      try {
+        // Envia requisição ao backend para redefinir a senha
+        const resp = await fetch('/usuario/redefinir-senha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, novaSenha, confirmarSenha })
+        });
+
+        const data = await resp.json(); // Resposta em JSON
+
+        if(!resp.ok){ // Caso o backend retorne erro
+          throw new Error(data.message || 'Falha ao redefinir senha.');
+        }
+
+        // Exibe sucesso
+        showAlert(data.message, 'success');
+
+        // Redireciona o usuário após 2 segundos
+        setTimeout(()=>{ window.location.href = '/'; }, 2000);
+
+      } catch(err){
+        showAlert(err.message); // Exibe erro
+      }
+    });
+  </script>

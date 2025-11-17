@@ -92,6 +92,7 @@ router.get('/api/disciplinas', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR DISCIPLINA POR ID
 router.get('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -107,7 +108,7 @@ router.get('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   }
 });
 
-
+// CRIAR DISCIPLINA
 router.post('/api/disciplinas', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
@@ -119,6 +120,7 @@ router.post('/api/disciplinas', authenticateToken, async (req, res) => {
   }
 });
 
+// EDITAR DISCIPLINA
 router.put('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -166,6 +168,7 @@ router.put('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETAR DISCIPLINA
 router.delete('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -209,6 +212,7 @@ router.get('/api/instituicoes', authenticateToken, async (req, res) => {
   }
 });
 
+// LISTAR INSTITUIÇÃO COM CURSOS
 router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
   const instituicaoId = req.params.id;
   const userId = req.user?.id;
@@ -233,11 +237,12 @@ router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// ADICIONAR INSTITUIÇÃO
 router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
     const data = req.body;
-    const [result] = await pool.query('INSERT INTO instituicao (nome, usuario_id) VALUES (?, ?)', [data.nome, userId]);
+    const [result] = await pool.query('INSERT INTO instituicao (nome, cnpj, usuario_id) VALUES (?, ?, ?)', [data.nome, data.cnpj || null, userId]);
     const insertId = (result as any).insertId;
     res.status(201).json({ id: insertId, nome: data.nome });
   } catch (err) {
@@ -245,7 +250,7 @@ router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ ROTA ESPECÍFICA ANTES DA GENÉRICA
+// ROTA ESPECÍFICA ANTES DA GENÉRICA
 router.get('/api/instituicoes/:id/stats', authenticateToken, async (req, res) => {
   try {
     const id = req.params.id;
@@ -290,7 +295,7 @@ router.get('/api/instituicoes/:id/stats', authenticateToken, async (req, res) =>
   }
 });
 
-// ✅ ROTA GENÉRICA DEPOIS DA ESPECÍFICA
+// ROTA GENÉRICA DEPOIS DA ESPECÍFICA
 router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user?.id;
@@ -320,6 +325,7 @@ router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// EDITAR INSTITUIÇÃO
 router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -331,6 +337,7 @@ router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETAR INSTITUIÇÃO
 router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -363,7 +370,7 @@ router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// CURSOS
+// LISTAR CURSOS
 router.get('/cursos/:id', async (req, res) => {
   const instituicaoId = Number(req.params.id);
   const token = req.query.token as string;
@@ -407,6 +414,7 @@ router.get('/cursos/:id', async (req, res) => {
   }
 });
 
+// LISTAR CURSOS
 router.get('/api/cursos', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -442,6 +450,7 @@ router.get('/api/cursos', authenticateToken, async (req, res) => {
   }
 });
 
+// CRIAR CURSO
 router.post('/api/cursos', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
@@ -472,6 +481,7 @@ router.post('/api/cursos', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR CURSO POR ID
 router.get('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -489,6 +499,7 @@ router.get('/api/cursos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// EDITAR CURSO
 router.put('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -503,6 +514,7 @@ router.put('/api/cursos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETAR CURSO
 router.delete('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -608,6 +620,7 @@ router.post('/api/turmas', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR TURMA POR ID
 router.get('/api/turmas/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -1199,6 +1212,51 @@ router.post('/api/notas', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error("Erro ao salvar nota:", err);
     res.status(500).json({ error: "Erro ao salvar nota." });
+  }
+});
+
+// BUSCAR AUDITORIA DE NOTAS POR TURMA
+router.get('/api/auditoria/:turma_id', authenticateToken, async (req, res) => {
+  try {
+    const { turma_id } = req.params;
+    const userId = req.user?.id;
+
+    // Verifica se o usuário tem acesso à turma
+    const [turmaRows] = await pool.query(
+      `SELECT t.*, d.usuario_id 
+       FROM turma t
+       JOIN disciplina d ON d.id = t.disciplina_id
+       WHERE t.id = ?`,
+      [turma_id]
+    );
+
+    const turma = (turmaRows as any[])[0];
+    if (!turma) return res.status(404).json({ error: "Turma não encontrada." });
+    if (turma.usuario_id !== userId) return res.status(403).json({ error: "Sem permissão." });
+
+    // Busca logs de auditoria ordenados por data/hora decrescente
+    const [auditoriaRows] = await pool.query(
+      `SELECT 
+        a.id,
+        a.data_hora,
+        a.operacao,
+        a.valor_antigo,
+        a.valor_novo,
+        al.nome as aluno_nome,
+        cn.sigla as componente_sigla
+       FROM auditoria_nota a
+       JOIN aluno al ON a.aluno_id = al.id
+       JOIN componente_nota cn ON a.componente_id = cn.id
+       WHERE a.turma_id = ?
+       ORDER BY a.data_hora DESC
+       LIMIT 100`,
+      [turma_id]
+    );
+
+    res.json(auditoriaRows);
+  } catch (err) {
+    console.error("Erro ao buscar auditoria:", err);
+    res.status(500).json({ error: "Erro ao buscar auditoria." });
   }
 });
 

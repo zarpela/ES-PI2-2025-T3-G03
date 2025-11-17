@@ -127,7 +127,8 @@
     let cursoId = null;
     let instituicaoId = null;
     let cursoNome = null;
-
+ 
+    // Renderiza o card de adicionar disciplina
     function renderAddCard() {
       const card = document.createElement('div');
       card.className = 'card-add-dashboard';
@@ -160,6 +161,7 @@
       return originalFetch.apply(this, args);
     };
 
+    // Pega os parametros para usar no backend
     async function captureParams() {
       const url = new URLSearchParams(window.location.search);
 
@@ -214,6 +216,7 @@
       mainTitle.textContent = cursoNome || "Disciplinas";
     }
 
+    // Carrega as disciplinas do usuário e renderiza os cards
     async function loadDisciplinas() {
       cardsContainer.innerHTML = '';
       try {
@@ -289,7 +292,7 @@
       }
     }
 
-
+    // Abre o modal de edição com os dados preenchidos  
     async function abrirModalEditarDisciplina(disciplina) {
       document.getElementById('editNomeDisciplinaInput').value = disciplina.nome;
       document.getElementById('editSiglaInput').value = disciplina.sigla;
