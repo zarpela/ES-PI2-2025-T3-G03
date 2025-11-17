@@ -14,21 +14,33 @@
   <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
     <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
       <div>
-        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
+        <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="letter-spacing:0.5px;">
+          Instituições
+        </a>
         <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
-        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Cursos</a>
+        <a href="#" id="btnVoltarCursos" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">
+          Cursos
+        </a>
         <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
-        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
+        <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">
+          Disciplinas
+        </a>
         <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
-        <span class="navbar-brand mb-0 h6 fw-semibold text-muted me-3" id="breadcrumbAlunos" style="cursor:default;">
+        <a href="#" id="btnVoltarTurmas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">
+          Turmas
+        </a>
+        <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
+
+        <span id="breadcrumbAlunos" class="navbar-brand mb-0 h6 fw-bold text-muted me-3" style="cursor:default;">
           Alunos
         </span>
       </div>
-
-      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">NotaDez</span>
+      <span class="fw-light" style="color:#4d4d4d; font-size:1.4rem;">
+        NotaDez
+      </span>
     </div>
   </nav>
 
@@ -57,7 +69,7 @@
       <!-- ComboBox à esquerda -->
       <div class="d-flex align-items-center gap-2">
         <select id="modoEdicao" class="form-select w-auto" onchange="alternarModoEdicao()">
-          <!-- 🔥 MODO EXIBIÇÃO ADICIONADO AQUI -->
+          <!-- MODO EXIBIÇÃO ADICIONADO AQUI -->
           <option value="exibicao" selected>Exibição</option>
           <option value="componente">Editar por componente</option>
           <option value="total">Edição Completa</option>
@@ -179,32 +191,103 @@
       infoModal.show();
     }
 
-    function captureParams() {
+    async function captureParams() {
       const params = new URLSearchParams(window.location.search);
       turmaId = params.get('turma_id');
       disciplinaId = params.get('disciplina_id');
       cursoId = params.get('curso_id');
       instituicaoId = params.get('instituicao_id');
-      const disciplinaNome = params.get('disciplina_nome');
-      const turmaNome = params.get('turma_nome');
+      let turmaNome = params.get('turma_nome');
+      let disciplinaNome = params.get('disciplina_nome');
+      let cursoNome = params.get('curso_nome');
 
-      mainTitle.textContent = (turmaNome ? `${turmaNome}` : (disciplinaNome ? disciplinaNome : 'Alunos'));
+      const token = localStorage.getItem('token');
 
+      // Se não veio nome do curso, busca no backend
+      if (!cursoNome && cursoId) {
+        try {
+          const res = await fetch(`/api/cursos/${cursoId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            cursoNome = data.nome;
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // Se não veio nome da disciplina, busca no backend
+      if (!disciplinaNome && disciplinaId) {
+        try {
+          const res = await fetch(`/api/disciplinas/${disciplinaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            disciplinaNome = data.nome;
+          }
+        } catch(e) { console.error(e); }
+      }
+
+      // Se não veio nome da turma, busca no backend
+      if (!turmaNome && turmaId) {
+        try {
+          const res = await fetch(`/api/turmas/${turmaId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            turmaNome = data.nome;
+          }
+        } catch(e) { console.error(e); }
+      }
+
+      // Atualiza textos na navbar
       const btnVoltarCursos = document.getElementById('btnVoltarCursos');
       const btnVoltarDisciplinas = document.getElementById('btnVoltarDisciplinas');
+      const btnVoltarTurmas = document.getElementById('btnVoltarTurmas');
+      const breadcrumbAlunos = document.getElementById('breadcrumbAlunos');
 
-      if (btnVoltarCursos) btnVoltarCursos.onclick = (e) => {
-        e?.preventDefault();
-        const token = localStorage.getItem('token');
-        window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
-      };
+      if (btnVoltarCursos) {
+        btnVoltarCursos.textContent = cursoNome || 'Cursos';
+        btnVoltarCursos.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
+        };
+      }
 
-      if (btnVoltarDisciplinas) btnVoltarDisciplinas.onclick = (e) => {
-        e?.preventDefault();
-        const token = localStorage.getItem('token');
-        window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
-      };
+      if (btnVoltarDisciplinas) {
+        btnVoltarDisciplinas.textContent = disciplinaNome || 'Disciplinas';
+        btnVoltarDisciplinas.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+        };
+      }
+
+      if (btnVoltarTurmas) {
+        btnVoltarTurmas.textContent = turmaNome || 'Turmas';
+        btnVoltarTurmas.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = `/turmas?token=${token}&disciplina_id=${disciplinaId}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
+        };
+      }
+
+      if (breadcrumbAlunos) {
+        breadcrumbAlunos.textContent = 'Alunos';
+      }
+
+      // Atualizar o título principal da página também
+      if (mainTitle) {
+        mainTitle.textContent = turmaNome || disciplinaNome || 'Alunos';
+      }
     }
+
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await captureParams();
+      await init();
+    });
+
 
     // MONTA CABEÇALHO
     function buildTableHeader(mostrarNotaFinal = false) {
@@ -504,7 +587,7 @@
       const modo = document.getElementById("modoEdicao").value;
 
       if (modo === "exibicao") {
-        // 🔥 EXIBIÇÃO = TUDO DESABILITADO
+        // EXIBIÇÃO = TUDO DESABILITADO
         document.querySelectorAll(".nota-input").forEach(inp => inp.disabled = true);
         return;
       }
@@ -819,15 +902,11 @@
       await loadAlunos();
       carregarSelectDeComponentes(componentes);
 
-      // 🔥 DEIXAR EXIBIÇÃO COMO PADRÃO
+      // DEIXAR EXIBIÇÃO COMO PADRÃO
       document.getElementById("modoEdicao").value = "exibicao";
       alternarModoEdicao();
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      captureParams();
-      init();
-    });
+    
   </script>
 </body>
 </html>

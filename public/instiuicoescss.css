@@ -179,3 +179,7 @@ body {
   background-color: #0052a3;  /* Mais escuro ao passar mouse */
   border-color: #0052a3;
 }
+
+#breadcrumbDisciplinaSelecionada {
+  color: #0d6efd !important;
+}

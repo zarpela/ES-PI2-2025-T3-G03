@@ -237,7 +237,7 @@ router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
     const data = req.body;
-    const [result] = await pool.query('INSERT INTO instituicao (nome, usuario_id) VALUES (?, ?)', [data.nome, userId]);
+    const [result] = await pool.query('INSERT INTO instituicao (nome, cnpj, usuario_id) VALUES (?, ?, ?)', [data.nome, data.cnpj || null, userId]);
     const insertId = (result as any).insertId;
     res.status(201).json({ id: insertId, nome: data.nome });
   } catch (err) {
