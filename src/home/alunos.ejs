@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- NAVBAR IGUAL AO DE DISCIPLINAS/TURMAS -->
+  <!-- NAVBAR PADRÃO -->
   <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
     <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100" style="padding-left:64px; padding-right:64px;">
       <div>
@@ -46,47 +46,60 @@
 
   <main class="dashboard-main pt-5">
 
-    <div class="d-flex justify-content-center mb-3 px-3">
+     <div class="d-flex justify-content-center mb-3 px-3">
       <div class="text-center">
         <div class="dashboard-title" id="mainTitle">Carregando...</div>
         <div class="dashboard-desc">Gerencie os alunos e componentes de nota</div>
       </div>
     </div>
 
+
     <div class="instituicoes-header text-center">Alunos</div>
 
-    <!-- Contêiner flex para tabela e painel de auditoria lado a lado -->
-    <div class="d-flex gap-3 mt-3 mx-3">
-      <!-- Tabela de notas -->
-      <div class="card p-3 flex-grow-1">
-        <div class="table-responsive">
-          <table class="table table-sm" id="notasTable">
-            <thead id="tableHead"></thead>
-            <tbody id="tableBody"></tbody>
-          </table>
+
+    <!-- Botões Adicionar e Remover aluno -->
+    <div class="d-flex justify-content-start gap-2 mt-3 px-3">
+      <button id="btnAdicionarAluno" class="btn btn-primary">Adicionar Aluno</button>
+      <button id="btnRemoverAluno" class="btn btn-danger">Remover Aluno</button>
+    </div>
+
+
+    <div class="card p-3 mt-3 mx-0">
+
+      <!-- Contêiner flex para tabela e painel de auditoria lado a lado -->
+      <div class="d-flex gap-3 mt-3 mx-3">
+        <!-- Tabela de notas -->
+        <div class="card p-3 flex-grow-1">
+          <div class="table-responsive">
+            <table class="table table-sm" id="notasTable">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Painel de auditoria recolhível (Sidebar) -->
+        <div id="auditoriaPanel" class="card p-3" style="width: 350px; max-height: 600px; overflow-y: auto; display: none; position: relative;">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-bold">Auditoria</h6>
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleAuditoria()" style="padding: 0.25rem 0.5rem;">
+              <span>✕</span>
+            </button>
+          </div>
+          <div id="auditoriaContent" class="small">
+            <p class="text-muted text-center">Carregando...</p>
+          </div>
         </div>
       </div>
 
-      <!-- Painel de auditoria recolhível -->
-      <div id="auditoriaPanel" class="card p-3" style="width: 400px; max-height: 600px; overflow-y: auto; display: none;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0 fw-bold">Auditoria de Notas</h6>
-          <button class="btn btn-sm btn-outline-secondary" onclick="toggleAuditoria()">
-            <span>✕</span>
-          </button>
-        </div>
-        <div id="auditoriaContent" class="small">
-          <p class="text-muted text-center">Carregando...</p>
-        </div>
+      <!-- Botão para mostrar/ocultar painel de auditoria -->
+      <div class="d-flex justify-content-end mt-2 px-3">
+        <button id="btnToggleAuditoria" class="btn btn-sm btn-outline-primary" onclick="toggleAuditoria()">
+          Mostrar Auditoria
+        </button>
       </div>
     </div>
 
-    <!-- Botão para mostrar/ocultar painel de auditoria -->
-    <div class="d-flex justify-content-end mt-2 px-3">
-      <button id="btnToggleAuditoria" class="btn btn-sm btn-outline-primary" onclick="toggleAuditoria()">
-        📋 Mostrar Auditoria
-      </button>
-    </div>
 
     <!-- === CONTROLES ABAIXO DA TABELA === -->
     <div class="d-flex justify-content-between align-items-center mt-3 px-3">
@@ -195,6 +208,59 @@
     </div>
   </div>
 
+  <!-- Modal: Adicionar Aluno -->
+  <div class="modal fade" id="adicionarAlunoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="adicionarAlunoForm" class="modal-content" autocomplete="off">
+        <div class="modal-header">
+          <h5 class="modal-title">Adicionar Aluno</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Matrícula</label>
+            <input type="text" class="form-control" id="alunoMatricula" name="identificador" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nome do Aluno</label>
+            <input type="text" class="form-control" id="alunoNome" name="nome" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-success" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Remover Aluno -->
+  <div class="modal fade" id="removerAlunoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Remover Aluno</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Selecione o aluno a ser removido</label>
+            <select class="form-select" id="alunoRemoverSelect">
+              <option value="">Selecione um aluno...</option>
+            </select>
+          </div>
+          <div class="alert alert-warning">
+            <strong>Atenção:</strong> O aluno será removido da turma. Esta ação não pode ser desfeita.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger" type="button" id="btnConfirmarRemocaoAluno">Remover Aluno</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
@@ -222,11 +288,11 @@
       
       if (panel.style.display === 'none') {
         panel.style.display = 'block';
-        btn.textContent = '📋 Ocultar Auditoria';
+        btn.textContent = 'Oultar Auditoria';
         loadAuditoria();
       } else {
         panel.style.display = 'none';
-        btn.textContent = '📋 Mostrar Auditoria';
+        btn.textContent = 'Mostrar Auditoria';
       }
     }
 
@@ -301,6 +367,7 @@
       infoModal.show();
     }
 
+    // Pega os parametros para usar no backend
     async function captureParams() {
       const params = new URLSearchParams(window.location.search);
       turmaId = params.get('turma_id');
@@ -1187,7 +1254,137 @@
       document.getElementById("modoEdicao").value = "exibicao";
       alternarModoEdicao();
     }
-    
+
+    const adicionarAlunoModal = new bootstrap.Modal(document.getElementById('adicionarAlunoModal'));
+    const removerAlunoModal = new bootstrap.Modal(document.getElementById('removerAlunoModal'));
+
+    // Abrir modal de adicionar aluno
+    document.getElementById('btnAdicionarAluno').addEventListener('click', () => {
+      adicionarAlunoModal.show();
+    });
+
+    // Adicionar aluno
+    document.getElementById('adicionarAlunoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const identificador = document.getElementById('alunoMatricula').value.trim();
+      const nome = document.getElementById('alunoNome').value.trim();
+
+      if (!identificador || !nome) {
+        showInfo('Preencha todos os campos');
+        return;
+      }
+
+      if (!turmaId) {
+        showInfo('turma_id não fornecido');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch('/api/alunos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            identificador,
+            nome,
+            turma_id: turmaId
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao adicionar aluno');
+
+        adicionarAlunoModal.hide();
+        document.getElementById('alunoMatricula').value = '';
+        document.getElementById('alunoNome').value = '';
+
+        await init();
+        showInfo('Aluno adicionado com sucesso');
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao adicionar aluno: ' + (err.message || err));
+      }
+    });
+
+    // Abrir modal de remover aluno
+    document.getElementById('btnRemoverAluno').addEventListener('click', async () => {
+      if (!turmaId) {
+        showInfo('turma_id não fornecido');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/alunos?turma_id=${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Erro ao buscar alunos');
+
+        const alunos = await res.json();
+
+        const select = document.getElementById('alunoRemoverSelect');
+        select.innerHTML = '<option value="">Selecione um aluno...</option>';
+
+        if (alunos.length === 0) {
+          showInfo('Não há alunos cadastrados na turma');
+          return;
+        }
+
+        alunos.forEach(aluno => {
+          const option = document.createElement('option');
+          option.value = aluno.id;
+          option.textContent = `${aluno.identificador} - ${aluno.nome}`;
+          select.appendChild(option);
+        });
+
+        removerAlunoModal.show();
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao carregar alunos: ' + (err.message || err));
+      }
+    });
+
+    // Confirmar remoção de aluno
+    document.getElementById('btnConfirmarRemocaoAluno').addEventListener('click', async () => {
+      const alunoId = document.getElementById('alunoRemoverSelect').value;
+
+      if (!alunoId) {
+        showInfo('Selecione um aluno para remover');
+        return;
+      }
+
+      if (!confirm('Tem certeza que deseja remover este aluno da turma?')) {
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/alunos/${alunoId}?turma_id=${turmaId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao remover aluno');
+
+        removerAlunoModal.hide();
+        document.getElementById('alunoRemoverSelect').value = '';
+
+        await init();
+        showInfo('Aluno removido com sucesso');
+
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao remover aluno: ' + (err.message || err));
+      }
+    });
+
   </script>
 </body>
 </html>

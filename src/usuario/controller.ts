@@ -40,6 +40,7 @@ router.get('/usuario/redefinir-senha', (req, res) => {
   res.render(path.join(__dirname, 'redefinir_senha.ejs'), { token });
 });
 
+// Rota POST para cadastrar usuário
 router.post("/cadastrar", async (req, res) => {
   try {
     const { nome, email, celular, senha } = req.body;

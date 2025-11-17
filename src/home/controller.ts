@@ -13,8 +13,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const JWT_SECRET = "segredo_super_secreto";
 
-
-
 declare global {
   namespace Express {
     interface Request {
@@ -94,6 +92,7 @@ router.get('/api/disciplinas', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR DISCIPLINA POR ID
 router.get('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -109,7 +108,7 @@ router.get('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   }
 });
 
-
+// CRIAR DISCIPLINA
 router.post('/api/disciplinas', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
@@ -121,6 +120,7 @@ router.post('/api/disciplinas', authenticateToken, async (req, res) => {
   }
 });
 
+// EDITAR DISCIPLINA
 router.put('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -168,6 +168,7 @@ router.put('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETAR DISCIPLINA
 router.delete('/api/disciplinas/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -211,6 +212,7 @@ router.get('/api/instituicoes', authenticateToken, async (req, res) => {
   }
 });
 
+// LISTAR INSTITUIÇÃO COM CURSOS
 router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
   const instituicaoId = req.params.id;
   const userId = req.user?.id;
@@ -235,6 +237,7 @@ router.get('/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// ADICIONAR INSTITUIÇÃO
 router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -247,7 +250,7 @@ router.post('/api/instituicoes', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ ROTA ESPECÍFICA ANTES DA GENÉRICA
+// ROTA ESPECÍFICA ANTES DA GENÉRICA
 router.get('/api/instituicoes/:id/stats', authenticateToken, async (req, res) => {
   try {
     const id = req.params.id;
@@ -292,7 +295,7 @@ router.get('/api/instituicoes/:id/stats', authenticateToken, async (req, res) =>
   }
 });
 
-// ✅ ROTA GENÉRICA DEPOIS DA ESPECÍFICA
+// ROTA GENÉRICA DEPOIS DA ESPECÍFICA
 router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   const id = req.params.id;
   const userId = req.user?.id;
@@ -322,6 +325,7 @@ router.get('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// EDITAR INSTITUIÇÃO
 router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -333,6 +337,7 @@ router.put('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETAR INSTITUIÇÃO
 router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -365,7 +370,7 @@ router.delete('/api/instituicoes/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// CURSOS
+// LISTAR CURSOS
 router.get('/cursos/:id', async (req, res) => {
   const instituicaoId = Number(req.params.id);
   const token = req.query.token as string;
@@ -409,6 +414,7 @@ router.get('/cursos/:id', async (req, res) => {
   }
 });
 
+// LISTAR CURSOS
 router.get('/api/cursos', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -444,6 +450,7 @@ router.get('/api/cursos', authenticateToken, async (req, res) => {
   }
 });
 
+// CRIAR CURSO
 router.post('/api/cursos', authenticateToken, async (req, res) => {
   try {
     const data = req.body;
@@ -474,6 +481,7 @@ router.post('/api/cursos', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR CURSO POR ID
 router.get('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -491,6 +499,7 @@ router.get('/api/cursos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// EDITAR CURSO
 router.put('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -505,6 +514,7 @@ router.put('/api/cursos/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETAR CURSO
 router.delete('/api/cursos/:id', authenticateToken, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -610,6 +620,7 @@ router.post('/api/turmas', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR TURMA POR ID
 router.get('/api/turmas/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.user?.id;

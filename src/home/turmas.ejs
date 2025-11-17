@@ -216,6 +216,7 @@
       };
     }
 
+    // Atualiza o breadcrumb da disciplina selecionada na navbar
     async function atualizarBreadcrumbDisciplina() {
       const url = new URLSearchParams(window.location.search);
       let disciplinaNome = url.get("disciplina_nome");
@@ -239,8 +240,7 @@
       document.getElementById('breadcrumbDisciplinaSelecionada').textContent = disciplinaNome || "-";
     }
 
-
-
+    // Carrega a fórmula de nota final e gerencia sua exibição
     async function loadFormula() {
       if (!disciplinaId) return;
       
@@ -280,6 +280,7 @@
       }
     }
 
+    // Salva a fórmula de nota final
     async function salvarFormula() {
       if (!disciplinaId) return;
       
@@ -317,6 +318,7 @@
       }
     }
 
+    // Carrega as turmas do usuário e renderiza os cards
     async function loadTurmas() {
       cardsContainer.innerHTML = "";
 
@@ -376,6 +378,7 @@
       renderAddCard();
     }
 
+    // Atualiza o breadcrumb da disciplina selecionada na navbar
     async function atualizarBreadcrumbs() {
       const url = new URLSearchParams(window.location.search);
 
@@ -415,10 +418,10 @@
         // Lógica para navegar, ex:
         const token = localStorage.getItem("token");
         window.location.href = `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
-};
+      };
     }
 
-
+    // Abre o modal de edição com os dados preenchidos
     function abrirModalEditar(turma) {
       editCodigoTurmaInput.value = turma.codigo;
       editNomeTurmaInput.value = turma.nome;
