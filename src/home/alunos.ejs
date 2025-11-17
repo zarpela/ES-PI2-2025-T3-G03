@@ -55,13 +55,37 @@
 
     <div class="instituicoes-header text-center">Alunos</div>
 
-    <div class="card p-3 mt-3 mx-3">
-      <div class="table-responsive">
-        <table class="table table-sm" id="notasTable">
-          <thead id="tableHead"></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+    <!-- Contêiner flex para tabela e painel de auditoria lado a lado -->
+    <div class="d-flex gap-3 mt-3 mx-3">
+      <!-- Tabela de notas -->
+      <div class="card p-3 flex-grow-1">
+        <div class="table-responsive">
+          <table class="table table-sm" id="notasTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- Painel de auditoria recolhível -->
+      <div id="auditoriaPanel" class="card p-3" style="width: 400px; max-height: 600px; overflow-y: auto; display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0 fw-bold">Auditoria de Notas</h6>
+          <button class="btn btn-sm btn-outline-secondary" onclick="toggleAuditoria()">
+            <span>✕</span>
+          </button>
+        </div>
+        <div id="auditoriaContent" class="small">
+          <p class="text-muted text-center">Carregando...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botão para mostrar/ocultar painel de auditoria -->
+    <div class="d-flex justify-content-end mt-2 px-3">
+      <button id="btnToggleAuditoria" class="btn btn-sm btn-outline-primary" onclick="toggleAuditoria()">
+        📋 Mostrar Auditoria
+      </button>
     </div>
 
     <!-- === CONTROLES ABAIXO DA TABELA === -->
@@ -190,6 +214,87 @@
     let instituicaoId = null;
     let componentes = [];
     let formulaNotaFinal = null;
+
+    // Função para alternar visibilidade do painel de auditoria
+    function toggleAuditoria() {
+      const panel = document.getElementById('auditoriaPanel');
+      const btn = document.getElementById('btnToggleAuditoria');
+      
+      if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.textContent = '📋 Ocultar Auditoria';
+        loadAuditoria();
+      } else {
+        panel.style.display = 'none';
+        btn.textContent = '📋 Mostrar Auditoria';
+      }
+    }
+
+    // Função para carregar logs de auditoria
+    async function loadAuditoria() {
+      const content = document.getElementById('auditoriaContent');
+      content.innerHTML = '<p class="text-muted text-center">Carregando...</p>';
+
+      if (!turmaId) {
+        content.innerHTML = '<p class="text-muted text-center">Turma não identificada</p>';
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      try {
+        const res = await fetch(`/api/auditoria/${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          throw new Error('Erro ao carregar auditoria');
+        }
+
+        const logs = await res.json();
+
+        if (logs.length === 0) {
+          content.innerHTML = '<p class="text-muted text-center">Nenhum registro de auditoria</p>';
+          return;
+        }
+
+        // Renderizar logs
+        let html = '<div class="list-group list-group-flush">';
+        logs.forEach(log => {
+          const dataHora = new Date(log.data_hora);
+          const dataFormatada = dataHora.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+
+          let mensagem = '';
+          if (log.operacao === 'INSERT') {
+            mensagem = `Nota ${log.componente_sigla} lançada: ${log.valor_novo}`;
+          } else if (log.operacao === 'UPDATE') {
+            mensagem = `Nota ${log.componente_sigla} alterada de ${log.valor_antigo} para ${log.valor_novo}`;
+          }
+
+          html += `
+            <div class="list-group-item list-group-item-action p-2 mb-2 border rounded">
+              <div class="d-flex w-100 justify-content-between">
+                <small class="text-muted">${dataFormatada}</small>
+              </div>
+              <p class="mb-1 small"><strong>${log.aluno_nome}</strong></p>
+              <small>${mensagem}</small>
+            </div>
+          `;
+        });
+        html += '</div>';
+
+        content.innerHTML = html;
+      } catch (err) {
+        console.error('Erro ao carregar auditoria:', err);
+        content.innerHTML = '<p class="text-danger text-center">Erro ao carregar auditoria</p>';
+      }
+    }
 
     function showInfo(msg) {
       infoModalBody.textContent = msg;
@@ -517,6 +622,12 @@
                 const data = await res.json();
                 if (!res.ok) {
                   throw new Error(data.error || 'Erro ao salvar nota');
+                }
+                
+                // Recarregar auditoria se o painel estiver visível
+                const auditoriaPanel = document.getElementById('auditoriaPanel');
+                if (auditoriaPanel && auditoriaPanel.style.display !== 'none') {
+                  loadAuditoria();
                 }
                 
                 // Atualizar nota final se houver fórmula

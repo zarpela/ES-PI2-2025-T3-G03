@@ -1204,4 +1204,49 @@ router.post('/api/notas', authenticateToken, async (req, res) => {
   }
 });
 
+// BUSCAR AUDITORIA DE NOTAS POR TURMA
+router.get('/api/auditoria/:turma_id', authenticateToken, async (req, res) => {
+  try {
+    const { turma_id } = req.params;
+    const userId = req.user?.id;
+
+    // Verifica se o usuário tem acesso à turma
+    const [turmaRows] = await pool.query(
+      `SELECT t.*, d.usuario_id 
+       FROM turma t
+       JOIN disciplina d ON d.id = t.disciplina_id
+       WHERE t.id = ?`,
+      [turma_id]
+    );
+
+    const turma = (turmaRows as any[])[0];
+    if (!turma) return res.status(404).json({ error: "Turma não encontrada." });
+    if (turma.usuario_id !== userId) return res.status(403).json({ error: "Sem permissão." });
+
+    // Busca logs de auditoria ordenados por data/hora decrescente
+    const [auditoriaRows] = await pool.query(
+      `SELECT 
+        a.id,
+        a.data_hora,
+        a.operacao,
+        a.valor_antigo,
+        a.valor_novo,
+        al.nome as aluno_nome,
+        cn.sigla as componente_sigla
+       FROM auditoria_nota a
+       JOIN aluno al ON a.aluno_id = al.id
+       JOIN componente_nota cn ON a.componente_id = cn.id
+       WHERE a.turma_id = ?
+       ORDER BY a.data_hora DESC
+       LIMIT 100`,
+      [turma_id]
+    );
+
+    res.json(auditoriaRows);
+  } catch (err) {
+    console.error("Erro ao buscar auditoria:", err);
+    res.status(500).json({ error: "Erro ao buscar auditoria." });
+  }
+});
+
 export default router;
