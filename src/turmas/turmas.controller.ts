@@ -62,3 +62,27 @@ export const exportarCsvController = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Erro ao gerar o arquivo CSV.' });
   }
 };
+
+export const importarAlunosJsonController = async (req: Request, res: Response) => {
+  try {
+    const turmaIdParam = req.params.id;
+    if (!turmaIdParam) {
+      return res.status(400).json({ message: 'ID da turma é obrigatório.' });
+    }
+    const turmaId = parseInt(turmaIdParam, 10);
+    if (isNaN(turmaId)) {
+      return res.status(400).json({ message: 'ID da turma inválido.' });
+    }
+
+    const payload = req.body;
+    if (!Array.isArray(payload)) {
+      return res.status(400).json({ message: 'O corpo da requisição deve ser um array de alunos.' });
+    }
+
+    const resultado = await notaService.importarAlunosDoJson(payload, turmaId);
+    return res.status(200).json(resultado);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Erro interno no servidor.' });
+  }
+};

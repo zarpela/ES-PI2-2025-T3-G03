@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { importarAlunosCsvController, exportarCsvController } from './turmas.controller.ts';
+import { importarAlunosCsvController, exportarCsvController, importarAlunosJsonController } from './turmas.controller.ts';
 import { authenticateToken } from '../usuario/authUsers.ts';
 
 const turmasRoutes = Router();
@@ -13,6 +13,13 @@ turmasRoutes.post(
   authenticateToken,
   upload.single('file'), 
   importarAlunosCsvController  
+);
+
+// Importação via JSON (array de alunos)
+turmasRoutes.post(
+  '/:id/import-json',
+  authenticateToken,
+  importarAlunosJsonController
 );
 
 turmasRoutes.get(

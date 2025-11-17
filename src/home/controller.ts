@@ -13,6 +13,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const JWT_SECRET = "segredo_super_secreto";
 
+
+
 declare global {
   namespace Express {
     interface Request {

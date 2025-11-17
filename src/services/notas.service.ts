@@ -171,4 +171,109 @@ export class NotaService {
       throw new Error("Não foi possível importar alunos.");
     }
   }
+
+  /**
+   * Importa e adiciona alunos a uma turma a partir de um array JSON.
+   * Aceita objetos com chaves { aluno_identificador, aluno_nome } ou { identificador, nome }.
+   */
+  async importarAlunosDoJson(jsonArray: any[], turmaId: number) {
+    if (!Array.isArray(jsonArray)) {
+      return { sucesso: false, message: 'Formato inválido: esperado um array.' };
+    }
+
+    // Normaliza entradas para o DTO esperado
+    const normalizados = jsonArray.map((item) => {
+      if (item == null || typeof item !== 'object') return {};
+      if (item.aluno_identificador && item.aluno_nome) {
+        return { aluno_identificador: String(item.aluno_identificador), aluno_nome: String(item.aluno_nome) };
+      }
+      if (item.identificador && item.nome) {
+        return { aluno_identificador: String(item.identificador), aluno_nome: String(item.nome) };
+      }
+      return {};
+    });
+
+    // Validação via class-validator como no CSV
+    const dtos = plainToInstance(AlunoImportCsvDto, normalizados);
+    const errosDeValidacao: any[] = [];
+    const dtosValidos: AlunoImportCsvDto[] = [];
+
+    for (const [index, dto] of dtos.entries()) {
+      const erros = await validate(dto);
+      if (erros.length > 0) {
+        errosDeValidacao.push({
+          linha: index + 1,
+          dados: dto,
+          erros: erros.map(e => Object.values(e.constraints || {})).flat()
+        });
+      } else {
+        dtosValidos.push(dto);
+      }
+    }
+
+    if (dtosValidos.length === 0) {
+      return {
+        sucesso: false,
+        message: 'Nenhum dado válido encontrado no JSON.',
+        erros: errosDeValidacao
+      };
+    }
+
+    const errosDeLogica: string[] = [];
+    let alunosAdicionados = 0;
+
+    try {
+      for (const [index, dto] of dtosValidos.entries()) {
+        const origemIndex = index + 1;
+        try {
+          const [alunoRows] = await pool.query(
+            'SELECT id FROM aluno WHERE identificador = ?',
+            [dto.aluno_identificador]
+          );
+          const alunos = alunoRows as any[];
+
+          let alunoId: number;
+          if (alunos.length === 0) {
+            const [insertResult] = await pool.query(
+              'INSERT INTO aluno (identificador, nome) VALUES (?, ?)',
+              [dto.aluno_identificador, dto.aluno_nome]
+            );
+            alunoId = (insertResult as any).insertId;
+          } else {
+            alunoId = alunos[0].id;
+          }
+
+          const [alunoTurmaRows] = await pool.query(
+            'SELECT id FROM aluno_turma WHERE aluno_id = ? AND turma_id = ?',
+            [alunoId, turmaId]
+          );
+          const alunosTurma = alunoTurmaRows as any[];
+
+          if (alunosTurma.length === 0) {
+            await pool.query(
+              'INSERT INTO aluno_turma (aluno_id, turma_id) VALUES (?, ?)',
+              [alunoId, turmaId]
+            );
+            alunosAdicionados++;
+          } else {
+            errosDeLogica.push(`Item ${origemIndex}: Aluno '${dto.aluno_identificador}' já está nesta turma.`);
+          }
+        } catch (error) {
+          errosDeLogica.push(`Item ${origemIndex}: Erro ao processar aluno '${dto.aluno_identificador}' - ${(error as Error).message}`);
+        }
+      }
+
+      return {
+        sucesso: true,
+        message: 'Importação concluída.',
+        adicionados: alunosAdicionados,
+        errosDeValidacao: errosDeValidacao.length,
+        errosDeLogica: errosDeLogica.length,
+        detalhes: { errosDeValidacao, errosDeLogica }
+      };
+    } catch (error) {
+      console.error('Erro na importação de alunos (JSON):', error);
+      throw new Error('Não foi possível importar alunos.');
+    }
+  }
 }

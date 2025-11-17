@@ -82,11 +82,15 @@
 
       <!-- Botões à direita -->
       <div class="d-flex flex-column gap-2">
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
           <label class="btn btn-outline-secondary mb-0">
             Importar CSV <input id="csvFile" type="file" accept=".csv" hidden>
           </label>
           <button id="btnExportarCsv" class="btn btn-outline-success mb-0">Exportar CSV</button>
+          <label class="btn btn-outline-secondary mb-0">
+            Importar JSON <input id="jsonFile" type="file" accept=".json" hidden>
+          </label>
+          <button id="btnExportarJson" class="btn btn-outline-success mb-0">Exportar JSON</button>
         </div>
         <div class="d-flex gap-2">
           <button id="btnCriarComponente" class="btn btn-primary">Novo componente</button>
@@ -174,6 +178,7 @@
     const tableBody = document.getElementById('tableBody');
     const mainTitle = document.getElementById('mainTitle');
     const csvFile = document.getElementById('csvFile');
+    const jsonFile = document.getElementById('jsonFile');
     const componenteModal = new bootstrap.Modal(document.getElementById('componenteModal'));
     const removerComponenteModal = new bootstrap.Modal(document.getElementById('removerComponenteModal'));
     const infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
@@ -892,6 +897,171 @@
       } catch (err) {
         console.error(err);
         showInfo('Erro ao exportar CSV: ' + (err.message || err));
+      }
+    });
+
+    // Importar JSON (alunos)
+    jsonFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!confirm(`Enviar JSON para a turma?`)) {
+        jsonFile.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const text = event.target && event.target.result ? String(event.target.result) : '';
+          const jsonData = JSON.parse(text);
+
+          if (!Array.isArray(jsonData)) {
+            showInfo('O arquivo JSON deve conter um array de alunos');
+            jsonFile.value = '';
+            return;
+          }
+
+          const token = localStorage.getItem('token');
+          const res = await fetch(`/api/turmas/${turmaId}/import-json`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(jsonData)
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || 'Erro na importação');
+
+          showInfo(`Importação concluída — inseridos: ${data.adicionados || 0}, pulados: ${data.errosDeLogica || 0}`);
+          jsonFile.value = '';
+          await init();
+        } catch (err) {
+          console.error(err);
+          showInfo('Erro ao importar JSON: ' + (err.message || err));
+          jsonFile.value = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Exportar JSON (notas por aluno)
+    document.getElementById('btnExportarJson').addEventListener('click', async () => {
+      if (!turmaId) {
+        showInfo('turma_id não fornecido na URL');
+        return;
+      }
+
+      if (componentes.length === 0) {
+        showInfo('Não há componentes cadastrados para exportar');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      if (!formulaNotaFinal && disciplinaId) {
+        await loadFormulaNotaFinal();
+      }
+
+      try {
+        const res = await fetch(`/api/notas/turma/${turmaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || 'Erro ao buscar notas');
+        }
+
+        const notas = await res.json();
+
+        const notasPorAluno = {};
+        notas.forEach(nota => {
+          const key = `${nota.aluno_id}_${nota.identificador}_${nota.nome}`;
+          if (!notasPorAluno[key]) {
+            notasPorAluno[key] = {
+              identificador: nota.identificador,
+              nome: nota.nome,
+              notas: {}
+            };
+          }
+          notasPorAluno[key].notas[nota.componente_sigla] = nota.valor;
+        });
+
+        const alunos = Object.values(notasPorAluno);
+        for (const aluno of alunos) {
+          for (const componente of componentes) {
+            const valor = aluno.notas[componente.sigla];
+            if (valor === null || valor === undefined || valor === '' || valor === '-') {
+              showInfo('Só é possível realizar a exportação quando todos os componentes possuírem nota lançada');
+              return;
+            }
+            const valorNumerico = parseFloat(valor);
+            if (isNaN(valorNumerico) || valorNumerico < 0 || valorNumerico > 10) {
+              showInfo('Por favor, insira notas válidas! (0-10)');
+              return;
+            }
+          }
+        }
+
+        const jsonExport = alunos.map(aluno => {
+          const out = {
+            identificador: aluno.identificador,
+            nome: aluno.nome
+          };
+          componentes.forEach(c => {
+            out[c.sigla] = aluno.notas[c.sigla] ?? null;
+          });
+          if (formulaNotaFinal && formulaNotaFinal.expressao) {
+            const notaFinal = calcularNotaFinal(aluno.notas);
+            out['nota_final'] = notaFinal !== null ? Number(notaFinal.toFixed(2)) : null;
+          }
+          return out;
+        });
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
+        const params = new URLSearchParams(window.location.search);
+        const turmaNome = params.get('turma_nome') || `Turma${turmaId}`;
+
+        let disciplinaSigla = 'SIGLA';
+        if (disciplinaId) {
+          try {
+            const disciplinaRes = await fetch(`/api/disciplinas/${disciplinaId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (disciplinaRes.ok) {
+              const disciplina = await disciplinaRes.json();
+              disciplinaSigla = disciplina.sigla || 'SIGLA';
+            }
+          } catch (err) {
+            console.error('Erro ao buscar sigla da disciplina:', err);
+          }
+        }
+
+        const fileName = `${year}-${month}-${day}_${hours}${minutes}${seconds}${milliseconds}-${turmaNome}_${disciplinaSigla}.json`;
+        const blob = new Blob([JSON.stringify(jsonExport, null, 2)], { type: 'application/json;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showInfo('JSON exportado com sucesso');
+      } catch (err) {
+        console.error(err);
+        showInfo('Erro ao exportar JSON: ' + (err.message || err));
       }
     });
 
