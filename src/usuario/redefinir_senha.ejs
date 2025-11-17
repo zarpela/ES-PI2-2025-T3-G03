@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <title>Redefinir Senha - NotaDez</title>
+  <link rel="stylesheet" href="/public/base-cad-log.css" />
+</head>
+<body>
+  <main class="container py-5 d-flex justify-content-center align-items-center">
+    <form id="form-redefinir" class="w-100" style="max-width: 420px;">
+      <h1 class="mb-4 text-center">Redefinir Senha</h1>
+      <div id="alert-area"></div>
+      <input type="hidden" id="token" value="<%= token %>">
+      <div class="mb-3">
+        <label for="novaSenha" class="form-label">Nova Senha</label>
+        <input type="password" class="form-control" id="novaSenha" required minlength="6" placeholder="Mínimo 6 caracteres" />
+      </div>
+      <div class="mb-4">
+        <label for="confirmarSenha" class="form-label">Confirmar Senha</label>
+        <input type="password" class="form-control" id="confirmarSenha" required minlength="6" placeholder="Repita a nova senha" />
+      </div>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="/" class="btn btn-light mb-3">Cancelar</a>
+        <button type="submit" class="btn btn-primary mb-3">Redefinir</button>
+      </div>
+    </form>
+  </main>
+  <script>
+    const form = document.getElementById('form-redefinir');
+    const alertArea = document.getElementById('alert-area');
+    const token = document.getElementById('token').value;
+    function showAlert(message, type='danger'){ 
+      alertArea.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+    }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertArea.innerHTML='';
+      const novaSenha = document.getElementById('novaSenha').value;
+      const confirmarSenha = document.getElementById('confirmarSenha').value;
+      if(novaSenha !== confirmarSenha){
+        showAlert('As senhas não coincidem.');
+        return;
+      }
+      try {
+        const resp = await fetch('/usuario/redefinir-senha', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, novaSenha, confirmarSenha })
+        });
+        const data = await resp.json();
+        if(!resp.ok){
+          throw new Error(data.message || 'Falha ao redefinir senha.');
+        }
+        showAlert(data.message, 'success');
+        setTimeout(()=>{ window.location.href = '/'; }, 2000);
+      } catch(err){
+        showAlert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>

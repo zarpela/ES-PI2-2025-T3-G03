@@ -115,10 +115,13 @@
                     throw new Error(data.message || 'Erro ao verificar o código.');
                 }
                 
-                // Sucesso!
+                // Sucesso: exibe mensagem e redireciona
                 showAlert(data.message, 'success');
-                // Opcional: redirecionar para a página de redefinição de senha
-                // window.location.href = '/usuario/redefinir-senha?token=...';
+                if (data.resetToken){
+                  setTimeout(()=>{
+                    window.location.href = `/usuario/redefinir-senha?token=${data.resetToken}`;
+                  }, 1200);
+                }
 
             } catch (error) {
                 showAlert(error.message);

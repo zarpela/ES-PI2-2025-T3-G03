@@ -14,6 +14,8 @@ const __dirname = path.dirname(__filename);
 // Armazenamento em memória para códigos de recuperação (para fins de demonstração)
 // Em uma aplicação real, use um banco de dados (ex: Redis) com expiração
 const recoveryCodes: { [email: string]: { code: string; expires: number } } = {};
+// Armazenamento temporário para tokens de redefinição de senha
+const resetTokens: { [token: string]: { email: string; expires: number } } = {};
 
 // Rota /usuario/cadastrar que renderiza cadastro.js
 router.get('/usuario/cadastrar', (req, res) => {
@@ -22,6 +24,20 @@ router.get('/usuario/cadastrar', (req, res) => {
 
 router.get('/usuario/recuperar-senha', (req, res) => {
   res.render(path.join(__dirname, 'senha_recover.ejs'));
+});
+
+// Formulário para redefinir senha após verificação de código
+router.get('/usuario/redefinir-senha', (req, res) => {
+  const { token } = req.query;
+  if (!token || typeof token !== 'string' || !resetTokens[token]) {
+    return res.status(400).send('Token inválido ou expirado. Solicite nova recuperação.');
+  }
+  const registro = resetTokens[token];
+  if (Date.now() > registro.expires) {
+    delete resetTokens[token];
+    return res.status(400).send('Token expirado. Solicite nova recuperação.');
+  }
+  res.render(path.join(__dirname, 'redefinir_senha.ejs'), { token });
 });
 
 router.post("/cadastrar", async (req, res) => {
@@ -142,7 +158,7 @@ router.post('/usuario/verificar-codigo', (req, res) => {
     }
 
     if (Date.now() > stored.expires) {
-        delete recoveryCodes[email]; // Limpa o código expirado
+        delete recoveryCodes[email];
         return res.status(400).json({ message: 'Código de recuperação expirado. Por favor, solicite um novo.' });
     }
 
@@ -150,12 +166,46 @@ router.post('/usuario/verificar-codigo', (req, res) => {
         return res.status(400).json({ message: 'Código de verificação inválido.' });
     }
 
-    // Código verificado com sucesso
-    delete recoveryCodes[email]; // O código só pode ser usado uma vez
-    
-    // Aqui, você normalmente redirecionaria o usuário para uma página para criar uma nova senha
-    // ou retornaria um token que autoriza a alteração da senha.
-    res.status(200).json({ message: 'Código verificado com sucesso. Você pode redefinir sua senha.' });
+    // Código verificado: gera token de redefinição válido por 15 minutos
+    delete recoveryCodes[email];
+    const token = crypto.randomBytes(32).toString('hex');
+    resetTokens[token] = { email, expires: Date.now() + 15 * 60 * 1000 };
+    res.status(200).json({ message: 'Código verificado com sucesso. Redirecionando para redefinição.', resetToken: token });
+});
+
+// Rota POST para efetivar redefinição de senha
+router.post('/usuario/redefinir-senha', async (req, res) => {
+  try {
+    const { token, novaSenha, confirmarSenha } = req.body;
+    if (!token || !novaSenha || !confirmarSenha) {
+      return res.status(400).json({ message: 'Dados incompletos.' });
+    }
+    if (novaSenha !== confirmarSenha) {
+      return res.status(400).json({ message: 'As senhas não coincidem.' });
+    }
+    const registro = resetTokens[token];
+    if (!registro) {
+      return res.status(400).json({ message: 'Token inválido.' });
+    }
+    if (Date.now() > registro.expires) {
+      delete resetTokens[token];
+      return res.status(400).json({ message: 'Token expirado.' });
+    }
+    // Verificar se email existe
+    const [rows] = await pool.query('SELECT id FROM usuario WHERE email = ?', [registro.email]);
+    const user = (rows as any[])[0];
+    if (!user) {
+      delete resetTokens[token];
+      return res.status(404).json({ message: 'Usuário não encontrado.' });
+    }
+    const hash = await bcrypt.hash(novaSenha, 10);
+    await pool.query('UPDATE usuario SET senha = ? WHERE id = ?', [hash, user.id]);
+    delete resetTokens[token];
+    res.status(200).json({ message: 'Senha redefinida com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao redefinir senha:', err);
+    res.status(500).json({ message: 'Erro interno ao redefinir senha.' });
+  }
 });
 
 
