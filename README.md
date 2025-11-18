@@ -1,5 +1,5 @@
 # Projeto NotaDez
-**Repositório:** `ES-PI2-2025-T3-G03`  
+**Repositório:** `PI_II_ES_TIME3`  
 **Disciplina:** Projeto Integrador II – PUC-Campinas  
 **Orientador:** Prof. Luã Muriana  
 **Integrantes**
@@ -7,7 +7,7 @@
   - Marcelo Zarpelon                  | RA: 25015323
   - Murillo Iamarino Caravita         | RA: 25014012
   - Rafael Henrique Dos Santos Inácio | RA: 25006702
-  - Rafael Candian                    | RA: 
+  - Rafael Candian                    | RA: 25016954
     
 ---
 
