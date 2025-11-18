@@ -1,4 +1,4 @@
--- Desenvolvido por Guilherme Henrique Moreira
+-- Desenvolvido por Guilherme Henrique Moreira e Rafael Candian
 CREATE DATABASE IF NOT EXISTS notadez;
 USE notadez;
 
