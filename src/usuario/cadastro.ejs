@@ -43,12 +43,12 @@
 
       <div class="mb-4">
         <label for="senha-cadastro" class="form-label">Senha *</label>
-        <input type="password" class="form-control" id="senha-cadastro" placeholder="Digite a senha" required/>
+        <input type="password" class="form-control" id="senha-cadastro" placeholder="Digite a senha" required minlength="6" title="A senha deve ter no mínimo 6 caracteres"/>
       </div>
 
       <div class="mb-4">
         <label for="conf-senha-cadastro" class="form-label">Confirmar Senha *</label>
-        <input type="password" class="form-control" id="conf-senha-cadastro" placeholder="Digite a senha" required/>
+        <input type="password" class="form-control" id="conf-senha-cadastro" placeholder="Digite a senha" required minlength="6" title="A senha deve ter no mínimo 6 caracteres"/>
       </div>
 
     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -67,6 +67,23 @@
 
         form.addEventListener('submit', async function (e) {
           e.preventDefault(); // evita envio padrão do formulário
+
+          // Validação de tamanho mínimo da senha
+          if (senha.value.length < 6) {
+            senha.classList.add('is-invalid');
+            if (!document.getElementById('senha-length-feedback')) {
+              const feedback = document.createElement('div');
+              feedback.className = 'invalid-feedback';
+              feedback.id = 'senha-length-feedback';
+              feedback.textContent = 'A senha deve ter no mínimo 6 caracteres';
+              senha.parentNode.appendChild(feedback);
+            }
+            senha.focus();
+            return;
+          }
+          senha.classList.remove('is-invalid');
+          const feedbackLength = document.getElementById('senha-length-feedback');
+          if (feedbackLength) feedbackLength.remove();
 
           // Validação de senha
           if (senha.value !== confSenha.value) {
