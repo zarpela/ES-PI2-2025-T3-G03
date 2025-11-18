@@ -1,3 +1,4 @@
+-- Desenvolvido por Rafael Candian
 -- Script de atualização para adicionar sistema de auditoria de notas
 -- Execute este script no banco de dados existente
 

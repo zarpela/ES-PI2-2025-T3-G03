@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Componentes de Nota</title>
 
+  <!-- Importa Bootstrap e CSS personalizado -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="/public/instiuicoescss.css" rel="stylesheet"/>
 </head>
@@ -16,6 +17,7 @@
 <nav class="navbar navbar-light bg-white fixed-top shadow-sm" style="height:56px; z-index:100;">
   <div class="container-fluid d-flex justify-content-between align-items-center px-4 w-100">
     <div>
+      <!-- Caminho de navegação (breadcrumb) -->
       <a href="/instituicoes" class="navbar-brand mb-0 h6 fw-bold text-primary me-1">Instituições</a>
       <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
@@ -25,6 +27,7 @@
       <a href="#" id="btnVoltarDisciplinas" class="navbar-brand mb-0 h6 fw-bold text-primary me-1" style="cursor:pointer;">Disciplinas</a>
       <span class="navbar-text me-1" style="color:#999;"> &gt; </span>
 
+      <!-- Último item (página atual) -->
       <span class="navbar-brand mb-0 h6 fw-semibold text-muted" id="breadcrumbComp">Componentes</span>
     </div>
 
@@ -32,19 +35,22 @@
   </div>
 </nav>
 
-<!-- Cria a dashboard -->
+<!-- Conteúdo principal -->
 <main class="dashboard-main pt-5">
   <div class="d-flex justify-content-between align-items-center mb-3 px-3">
     <div>
+      <!-- Título da disciplina (carregado via JS) -->
       <div class="dashboard-title" id="discTitle">Carregando...</div>
       <div class="dashboard-desc">Gerencie os componentes de nota desta disciplina</div>
     </div>
 
+    <!-- Botão para abrir modal de criação -->
     <button class="btn btn-primary" id="btnNovoComponente">Novo Componente</button>
   </div>
 
   <div class="instituicoes-header">Componentes de Nota</div>
 
+  <!-- Lista de componentes -->
   <div class="row g-3 px-3 mt-2" id="compList"></div>
 </main>
 
@@ -57,6 +63,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
+      <!-- Inputs do formulário -->
       <div class="modal-body">
         <div class="mb-3">
           <label class="form-label">Nome</label>
@@ -82,19 +89,22 @@
   </div>
 </div>
 
+<!-- Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+  // Seleção de elementos HTML
   const compList = document.getElementById("compList");
   const discTitle = document.getElementById("discTitle");
 
+  // IDs usados nas requisições
   let disciplinaId = null;
   let cursoId = null;
   let instituicaoId = null;
 
   const compModal = new bootstrap.Modal(document.getElementById("compModal"));
 
-  // Pega os parametros para usar no backend
+  // Função para pegar parâmetros da URL
   function getParams() {
     const p = new URLSearchParams(window.location.search);
     disciplinaId = p.get("disciplina_id");
@@ -103,13 +113,15 @@
     discTitle.textContent = p.get("disciplina_nome") ?? "Componentes";
   }
 
-  // Carrega os componentes
+  // Função para carregar componentes do backend
   async function loadComponentes() {
     compList.innerHTML = "";
     const token = localStorage.getItem("token");
+
     const res = await fetch(`/api/componentes?disciplina_id=${disciplinaId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
+
     const data = await res.json();
 
     if (data.length === 0) {
@@ -117,6 +129,7 @@
       return;
     }
 
+    // Renderiza cada componente como card
     data.forEach(c => {
       const div = document.createElement("div");
       div.className = "col-12 col-md-6 col-lg-4";
@@ -135,6 +148,7 @@
     });
   }
 
+  // Navega para a tela de alunos/notas
   function goAlunos() {
     const token = localStorage.getItem("token");
 
@@ -142,25 +156,26 @@
       `/alunos?token=${token}&disciplina_id=${disciplinaId}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
   }
 
-  // NAVBAR links
+  // Botão da navbar que volta para cursos
   document.getElementById("btnVoltarCursos").onclick = () => {
     const token = localStorage.getItem("token");
     window.location.href =
       `/cursos/${instituicaoId}?token=${token}&instituicao_id=${instituicaoId}`;
   };
 
+  // Botão da navbar que volta para disciplinas
   document.getElementById("btnVoltarDisciplinas").onclick = () => {
     const token = localStorage.getItem("token");
     window.location.href =
       `/disciplinas?token=${token}&curso_id=${cursoId}&instituicao_id=${instituicaoId}`;
   };
 
-  // Abrir modal
+  // Abre o modal de novo componente
   document.getElementById("btnNovoComponente").onclick = () => {
     compModal.show();
   };
 
-  // Criar componente
+  // Submissão do formulário "Novo componente"
   document.getElementById("formComp").onsubmit = async (e) => {
     e.preventDefault();
 
@@ -190,6 +205,7 @@
     }
   };
 
+  // Executa ao carregar a página
   window.onload = async () => {
     getParams();
     await loadComponentes();
