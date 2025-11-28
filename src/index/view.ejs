@@ -49,8 +49,8 @@
 
       <div class="mb-3 form-check d-flex justify-content-between align-items-center">
         <div>
-          <input type="checkbox" class="form-check-input" id="lembreSenha" />
-          <label class="form-check-label" for="lembreSenha">Lembrar a senha</label>
+          <input type="checkbox" class="form-check-input" id="mostrarSenha" />
+          <label class="form-check-label" for="mostrarSenha">Mostrar senha</label>
         </div>
         <a href="/usuario/recuperar-senha" class="small">Esqueci minha senha</a>
       </div>
@@ -73,6 +73,7 @@
         const form = document.getElementById('form-login');
         const emailInput = document.getElementById('EmailLogin');
         const senhaInput = document.getElementById('SenhasLogin');
+        const mostrarSenhaCheckbox = document.getElementById('mostrarSenha');
 
         // Manipula o evento de submissão do formulário
         form.addEventListener('submit', async (e) => {
@@ -105,6 +106,15 @@
           } catch (err) {
             //console.error(err);
             alert('Erro ao fazer login. Tente novamente mais tarde.');
+          }
+        });
+
+        // Alterna a visibilidade da senha
+        mostrarSenhaCheckbox.addEventListener('change', () => {
+          if (mostrarSenhaCheckbox.checked) {
+            senhaInput.type = 'text';
+          } else {
+            senhaInput.type = 'password';
           }
         });
       });
