@@ -6,7 +6,7 @@
   - Guilherme Henrique Moreira        | RA: 25006702
   - Marcelo Zarpelon                  | RA: 25015323
   - Murillo Iamarino Caravita         | RA: 25014012
-  - Rafael Henrique Dos Santos Inácio | RA: 25006702
+  - Rafael Henrique Dos Santos Inácio | RA: 25009719
   - Rafael Candian                    | RA: 25016954
     
 ---
